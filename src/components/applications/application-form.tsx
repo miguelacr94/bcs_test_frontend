@@ -83,14 +83,35 @@ export function ApplicationForm() {
     },
   });
 
-  // Mutación para Validar (Si existe, crea solicitud. Si no, pasa a registro)
+  // Mutación para Validar (Si existe, busca si tiene solicitud activa. Si no, pasa a registro)
   const validateMutation = useMutation({
     mutationFn: (doc: string) => customerService.validateCustomer(doc),
     onSuccess: async (customerData, doc) => {
       setDocument(doc);
       if (customerData) {
-        // Cliente existe, crear solicitud directamente
-        createApplication.mutate(customerData.document);
+        try {
+          // Cliente existe, consultar si ya tiene una solicitud activa en proceso
+          const appsResult = await applicationService.findAll({ clientId: customerData.document });
+          const activeApp = appsResult.data?.find(
+            (app) =>
+              app.status === ApplicationStatus.IN_PROGRESS ||
+              app.status === ApplicationStatus.PENDING_VALIDATION
+          );
+
+          if (activeApp) {
+            toast({
+              title: "¡Solicitud en curso encontrada!",
+              description: "Te estamos redirigiendo para que continúes con tu proceso.",
+            });
+            router.push(`/applications/${activeApp.id}`);
+          } else {
+            // No tiene solicitud activa, crear una nueva
+            createApplication.mutate(customerData.document);
+          }
+        } catch (err) {
+          // Si falla la búsqueda por alguna razón, procedemos a intentar crear una nueva
+          createApplication.mutate(customerData.document);
+        }
       } else {
         // Cliente no existe, pedir datos
         setStep("REGISTRATION");
