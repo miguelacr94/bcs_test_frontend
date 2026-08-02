@@ -143,6 +143,28 @@ export function ApplicationDetails() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (data: { status: ApplicationStatus }) =>
+      applicationRepository.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["application", id] });
+      queryClient.invalidateQueries({ queryKey: ["application-events", id] });
+      toast({
+        title: "Condiciones abiertas",
+        description: "Ahora puedes cambiar el monto y plazo para simular nuevamente.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error al modificar condiciones",
+        description:
+          error.response?.data?.message ||
+          "No se pudieron restablecer las condiciones.",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -592,34 +614,53 @@ export function ApplicationDetails() {
                     {renderOfferDetails(app.simulationResult)}
 
                     {role === "CLIENT" && !isClosed && (
-                      <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/25">
+                      <div className="space-y-3 pt-6 border-t border-border/25">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <Button
+                            className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
+                            disabled={
+                              finalizeMutation.isPending ||
+                              !app.simulationResult?.success
+                            }
+                            onClick={() => finalizeMutation.mutate()}
+                          >
+                            {finalizeMutation.isPending ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="mr-1.5 h-4.5 w-4.5" />
+                            )}
+                            Aceptar Oferta
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
+                            disabled={abandonMutation.isPending}
+                            onClick={() => abandonMutation.mutate()}
+                          >
+                            {abandonMutation.isPending ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <XCircle className="mr-1.5 h-4.5 w-4.5" />
+                            )}
+                            Rechazar Oferta
+                          </Button>
+                        </div>
                         <Button
-                          className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
-                          disabled={
-                            finalizeMutation.isPending ||
-                            !app.simulationResult?.success
+                          variant="ghost"
+                          className="w-full h-11 text-sm font-heading font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-800 rounded-lg transition-colors"
+                          disabled={updateMutation.isPending}
+                          onClick={() =>
+                            updateMutation.mutate({
+                              status: ApplicationStatus.IN_PROGRESS,
+                            })
                           }
-                          onClick={() => finalizeMutation.mutate()}
                         >
-                          {finalizeMutation.isPending ? (
+                          {updateMutation.isPending ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           ) : (
-                            <CheckCircle2 className="mr-1.5 h-4.5 w-4.5" />
+                            <Zap className="mr-1.5 h-4 w-4" />
                           )}
-                          Aceptar Oferta
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
-                          disabled={abandonMutation.isPending}
-                          onClick={() => abandonMutation.mutate()}
-                        >
-                          {abandonMutation.isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <XCircle className="mr-1.5 h-4.5 w-4.5" />
-                          )}
-                          Rechazar Oferta
+                          Modificar Condiciones (Simular otra vez)
                         </Button>
                       </div>
                     )}
