@@ -50,6 +50,8 @@ export function ApplicationDetails() {
   const [isSimulateOpen, setIsSimulateOpen] = useState(false);
   const [amount, setAmount] = useState<number | "">("");
   const [termMonths, setTermMonths] = useState<number | "">("");
+  const [isAbandonDialogOpen, setIsAbandonDialogOpen] = useState(false);
+  const [abandonReason, setAbandonReason] = useState("");
 
   const {
     data: app,
@@ -122,22 +124,24 @@ export function ApplicationDetails() {
   });
 
   const abandonMutation = useMutation({
-    mutationFn: () =>
-      applicationRepository.abandon(id, "Oferta rechazada por el usuario"),
+    mutationFn: (reason: string) =>
+      applicationRepository.abandon(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["application", id] });
       queryClient.invalidateQueries({ queryKey: ["application-events", id] });
+      setIsAbandonDialogOpen(false);
+      setAbandonReason("");
       toast({
-        title: "Oferta Rechazada",
-        description: "La solicitud ha sido cancelada.",
+        title: "Solicitud Abandonada",
+        description: "La solicitud ha sido cancelada con éxito.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error al rechazar",
+        title: "Error al abandonar la solicitud",
         description:
           error.response?.data?.message ||
-          "No se puede cancelar esta solicitud.",
+          "No se pudo completar la acción.",
         variant: "destructive",
       });
     },
@@ -326,10 +330,11 @@ export function ApplicationDetails() {
     app.status === ApplicationStatus.ABANDONED;
   const showAdminLogs = role === "ADMIN";
   const hasOffer =
+    app.status === ApplicationStatus.VALIDATED &&
     app.simulationResult && Object.keys(app.simulationResult).length > 0;
   const canSimulate =
     role === "CLIENT" &&
-    (!app.simulationResult || Object.keys(app.simulationResult).length === 0) &&
+    (app.status === ApplicationStatus.IN_PROGRESS || app.status === ApplicationStatus.PENDING_VALIDATION) &&
     !isClosed;
 
   return (
@@ -355,7 +360,11 @@ export function ApplicationDetails() {
                       ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                       : app.status === ApplicationStatus.ABANDONED
                         ? "bg-rose-50 text-rose-700 border-rose-100"
-                        : "bg-primary/5 text-primary border-primary/10"
+                        : app.status === ApplicationStatus.VALIDATED
+                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                          : app.status === ApplicationStatus.PENDING_VALIDATION
+                            ? "bg-amber-50 text-amber-700 border-amber-100"
+                            : "bg-primary/5 text-primary border-primary/10"
                   }`}
                 >
                   {app.status}
@@ -472,7 +481,11 @@ export function ApplicationDetails() {
                       ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                       : app.status === ApplicationStatus.ABANDONED
                         ? "bg-rose-50 text-rose-700 border-rose-100"
-                        : "bg-primary/5 text-primary border-primary/10"
+                        : app.status === ApplicationStatus.VALIDATED
+                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                          : app.status === ApplicationStatus.PENDING_VALIDATION
+                            ? "bg-amber-50 text-amber-700 border-amber-100"
+                            : "bg-primary/5 text-primary border-primary/10"
                   }`}
                 >
                   {app.status}
@@ -635,7 +648,7 @@ export function ApplicationDetails() {
                             variant="outline"
                             className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
                             disabled={abandonMutation.isPending}
-                            onClick={() => abandonMutation.mutate()}
+                            onClick={() => setIsAbandonDialogOpen(true)}
                           >
                             {abandonMutation.isPending ? (
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -671,6 +684,95 @@ export function ApplicationDetails() {
           )}
         </div>
       )}
+      {/* Diálogo de Motivo de Abandono Obligatorio */}
+      <Dialog open={isAbandonDialogOpen} onOpenChange={setIsAbandonDialogOpen}>
+        <DialogContent className="rounded-lg max-w-sm sm:max-w-md bg-white border border-border/60">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-lg font-bold text-slate-800">
+              ¿Por qué deseas rechazar la oferta?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 mt-1">
+              Para cancelar la solicitud, por favor ingresa o selecciona un motivo obligatorio.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 my-2">
+            <div className="space-y-2">
+              <Label
+                htmlFor="reason-select"
+                className="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >
+                Selecciona una opción
+              </Label>
+              <Select
+                onValueChange={(val) => setAbandonReason(val || "")}
+                value={abandonReason}
+              >
+                <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-sm font-medium text-slate-700 transition-all">
+                  <SelectValue placeholder="Selecciona el motivo" />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg shadow-lg border border-primary/10">
+                  <SelectItem value="Encontré mejor tasa en otro banco" className="rounded-md">
+                    Encontré mejor tasa en otro banco
+                  </SelectItem>
+                  <SelectItem value="Ya no requiero el crédito" className="rounded-md">
+                    Ya no requiero el crédito
+                  </SelectItem>
+                  <SelectItem value="Monto aprobado es insuficiente" className="rounded-md">
+                    Monto aprobado es insuficiente
+                  </SelectItem>
+                  <SelectItem value="El plazo de pago es muy corto" className="rounded-md">
+                    El plazo de pago es muy corto
+                  </SelectItem>
+                  <SelectItem value="Otro" className="rounded-md">
+                    Otro motivo...
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="custom-reason"
+                className="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >
+                O escribe un motivo personalizado
+              </Label>
+              <Input
+                id="custom-reason"
+                type="text"
+                placeholder="Escribe aquí tu motivo..."
+                value={abandonReason}
+                onChange={(e) => setAbandonReason(e.target.value)}
+                className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg text-sm transition-all"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-border/20">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAbandonDialogOpen(false);
+                setAbandonReason("");
+              }}
+              className="h-10 text-xs font-semibold rounded-lg"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={abandonMutation.isPending || !abandonReason.trim()}
+              onClick={() => abandonMutation.mutate(abandonReason)}
+              className="h-10 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-md shadow-red-600/10 transition-all active:scale-[0.98]"
+            >
+              {abandonMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <XCircle className="mr-1.5 h-4 w-4" />
+              )}
+              Confirmar Cancelación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 export enum ApplicationStatus {
   IN_PROGRESS = 'En Proceso',
   PENDING_VALIDATION = 'Pendiente Validación',
+  VALIDATED = 'Validada',
   FINALIZED = 'Finalizada',
   ABANDONED = 'Abandonada',
 }
