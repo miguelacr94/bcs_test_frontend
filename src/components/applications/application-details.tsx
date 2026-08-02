@@ -95,6 +95,7 @@ export function ApplicationDetails() {
       }
     },
     onError: (error: any) => {
+      queryClient.invalidateQueries({ queryKey: ["application", id] });
       queryClient.invalidateQueries({ queryKey: ["application-events", id] });
       toast({
         title: "Error al solicitar oferta",
@@ -332,6 +333,8 @@ export function ApplicationDetails() {
   const hasOffer =
     app.simulationResult && Object.keys(app.simulationResult).length > 0;
   const canSimulate = role === "CLIENT" && !isClosed;
+  const lastEvent = app.events && app.events.length > 0 ? app.events[app.events.length - 1] : null;
+  const isTechnicalError = lastEvent && lastEvent.type === "SYSTEM_ERROR";
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 animate-in fade-in duration-500">
@@ -513,6 +516,19 @@ export function ApplicationDetails() {
           {/* Columna Derecha: Formulario de Viabilidad u Oferta Pre-aprobada */}
           {(hasOffer || canSimulate) && (
             <div className="space-y-6">
+              {/* Alerta de Error Técnico Temporal en Simulación */}
+              {isTechnicalError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 space-y-2 animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                    <span className="font-bold text-sm">Fallo Técnico en la Validación</span>
+                  </div>
+                  <p className="text-xs text-red-700 font-medium">
+                    {lastEvent.message}. Por favor revisa los datos de simulación e intenta nuevamente.
+                  </p>
+                </div>
+              )}
+
               {/* Paso 2: Generar Oferta (Si no tiene oferta y está abierta) */}
               {canSimulate && (
                 <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
