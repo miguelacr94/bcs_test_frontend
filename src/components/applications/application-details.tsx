@@ -128,6 +128,105 @@ export function ApplicationDetails() {
       </div>
     );
   }
+  
+  const calculateMonthlyFee = (amount: number, annualRate: number, termMonths: number) => {
+    const r = annualRate / 100;
+    if (r <= 0) return amount / termMonths;
+    const fee = (amount * r) / (1 - Math.pow(1 + r, -termMonths));
+    return Math.round(fee);
+  };
+
+  const renderOfferDetails = (result: any) => {
+    if (!result || !result.offerDetails) return null;
+    
+    const { approvedAmount, interestRate, termMonths } = result.offerDetails;
+    const monthlyFee = calculateMonthlyFee(approvedAmount, interestRate, termMonths);
+
+    if (result.success) {
+      return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="flex items-center gap-2.5 text-emerald-800 bg-emerald-50/30 border border-emerald-100/50 rounded-xl p-3.5">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+            <p className="font-semibold text-sm leading-tight text-emerald-900">{result.message}</p>
+          </div>
+          
+          <div className="bg-gradient-to-br from-primary/[0.03] to-primary/[0.01] border border-primary/15 rounded-2xl p-6 text-center space-y-2.5 shadow-[0_4px_12px_rgba(0,102,204,0.02)]">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Monto Pre-Aprobado</span>
+            <div className="flex items-start justify-center gap-1">
+              <span className="text-xl font-bold text-slate-400 mt-2 font-heading">$</span>
+              <span className="text-4xl md:text-5xl font-black text-slate-800 font-heading tracking-tight">
+                {approvedAmount.toLocaleString('es-CO')}
+              </span>
+            </div>
+            <p className="text-[11px] text-primary font-semibold tracking-wider uppercase">Cupo Listo para Radicación</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-slate-50/70 border border-slate-100/80 rounded-xl p-4 space-y-1.5 transition-all hover:bg-slate-50">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cuota Mensual (Est.)</span>
+              <p className="text-lg font-extrabold text-slate-800 font-heading tracking-tight">
+                ${monthlyFee.toLocaleString('es-CO')}
+              </p>
+            </div>
+            <div className="bg-slate-50/70 border border-slate-100/80 rounded-xl p-4 space-y-1.5 transition-all hover:bg-slate-50">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tasa de Interés</span>
+              <p className="text-lg font-extrabold text-slate-800 font-heading tracking-tight">
+                {interestRate}% <span className="text-[10px] text-slate-400 font-bold font-sans">M.V.</span>
+              </p>
+            </div>
+            <div className="bg-slate-50/70 border border-slate-100/80 rounded-xl p-4 space-y-1.5 transition-all hover:bg-slate-50">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Plazo Autorizado</span>
+              <p className="text-lg font-extrabold text-slate-800 font-heading tracking-tight">
+                {termMonths} <span className="text-[10px] text-slate-400 font-bold font-sans">meses</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="flex items-center gap-2.5 text-rose-800 bg-rose-50/30 border border-rose-100/50 rounded-xl p-3.5">
+            <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+            <p className="font-semibold text-sm leading-tight text-rose-900">{result.message}</p>
+          </div>
+
+          <div className="bg-slate-50/50 border border-border/40 rounded-xl p-5 space-y-5">
+            <div className="text-center space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Alternativo Disponible</span>
+              <div className="flex items-start justify-center gap-1">
+                <span className="text-lg font-bold text-slate-400 mt-1.5 font-heading">$</span>
+                <span className="text-3xl font-black text-slate-800 font-heading tracking-tight">
+                  {approvedAmount.toLocaleString('es-CO')}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border/20 text-center">
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cuota Est.</span>
+                <p className="text-md font-extrabold text-slate-800 font-heading">
+                  ${monthlyFee.toLocaleString('es-CO')}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tasa (M.V.)</span>
+                <p className="text-md font-extrabold text-slate-800 font-heading">
+                  {interestRate}%
+                </p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Plazo</span>
+                <p className="text-md font-extrabold text-slate-800 font-heading">
+                  {termMonths} m.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  };
 
   const isClosed = app.status === ApplicationStatus.FINALIZED || app.status === ApplicationStatus.ABANDONED;
   const showAdminLogs = role === 'ADMIN';
@@ -188,67 +287,8 @@ export function ApplicationDetails() {
                   <CardTitle className="font-heading text-xl font-bold text-slate-800">Resultado de Oferta</CardTitle>
                   <CardDescription className="text-xs text-slate-500 mt-1">Condiciones pre-aprobadas válidas para radicación.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  {app.simulationResult.success && app.simulationResult.offerDetails ? (
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-2 text-emerald-800">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                        <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-border/20">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Aprobado</p>
-                          <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                            ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa (N.M.V)</p>
-                          <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                            {app.simulationResult.offerDetails.interestRate}%
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo Autorizado</p>
-                          <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                            {app.simulationResult.offerDetails.termMonths} meses
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-2 text-rose-800">
-                        <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
-                        <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
-                      </div>
-                      {app.simulationResult.offerDetails && (
-                        <div className="pt-4 border-t border-border/20 space-y-4">
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativa sugerida:</p>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-1">
-                              <p className="text-xs font-medium text-slate-400">Monto Máximo</p>
-                              <p className="text-xl font-bold text-slate-800 font-heading">
-                                ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-xs font-medium text-slate-400">Tasa (N.M.V)</p>
-                              <p className="text-xl font-bold text-slate-800 font-heading">
-                                {app.simulationResult.offerDetails.interestRate}%
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-xs font-medium text-slate-400">Plazo Sugerido</p>
-                              <p className="text-xl font-bold text-slate-800 font-heading">
-                                {app.simulationResult.offerDetails.termMonths} meses
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <CardContent className="p-6">
+                  {renderOfferDetails(app.simulationResult)}
                 </CardContent>
               </Card>
             )}
@@ -391,66 +431,7 @@ export function ApplicationDetails() {
                     <CardDescription className="text-xs text-slate-500 mt-1">Condiciones pre-aprobadas válidas para radicación.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    {app.simulationResult.success && app.simulationResult.offerDetails ? (
-                      <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="flex items-center gap-2 text-emerald-800">
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                          <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-border/20">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Aprobado</p>
-                            <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                              ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa (N.M.V)</p>
-                            <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                              {app.simulationResult.offerDetails.interestRate}%
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo Autorizado</p>
-                            <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                              {app.simulationResult.offerDetails.termMonths} meses
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="flex items-center gap-2 text-rose-800">
-                          <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
-                          <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
-                        </div>
-                        {app.simulationResult.offerDetails && (
-                          <div className="pt-4 border-t border-border/20 space-y-4">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativa sugerida:</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                              <div className="space-y-1">
-                                <p className="text-xs font-medium text-slate-400">Monto Máximo</p>
-                                <p className="text-xl font-bold text-slate-800 font-heading">
-                                  ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
-                                </p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-xs font-medium text-slate-400">Tasa (N.M.V)</p>
-                                <p className="text-xl font-bold text-slate-800 font-heading">
-                                  {app.simulationResult.offerDetails.interestRate}%
-                                </p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-xs font-medium text-slate-400">Plazo Sugerido</p>
-                                <p className="text-xl font-bold text-slate-800 font-heading">
-                                  {app.simulationResult.offerDetails.termMonths} meses
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {renderOfferDetails(app.simulationResult)}
 
                     {role === 'CLIENT' && !isClosed && (
                       <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/25">
