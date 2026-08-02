@@ -77,20 +77,23 @@ export function ApplicationDetails() {
         Number(termMonths) || 0,
       ),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["application", id] });
-      queryClient.invalidateQueries({ queryKey: ["application-events", id] });
+      queryClient.setQueryData(['application', id], (old) => ({
+        ...(old as any),
+        simulationResult: data.simulationResult,
+      }));
+      queryClient.invalidateQueries({ queryKey: ['application-events', id] });
       setIsSimulateOpen(false);
 
       if (data.simulationResult?.success) {
         toast({
-          title: "Oferta Generada",
-          description: "Se ha generado una oferta viable exitosamente.",
+          title: 'Oferta Generada',
+          description: 'Se ha generado una oferta viable exitosamente.',
         });
       } else {
         toast({
-          title: "Oferta No Viable",
-          description: data.simulationResult?.message || "Revisar detalles.",
-          variant: "destructive",
+          title: 'Oferta No Viable',
+          description: data.simulationResult?.message || 'Revisar detalles.',
+          variant: 'destructive',
         });
       }
     },
@@ -326,16 +329,15 @@ export function ApplicationDetails() {
     }
   };
 
-  const lastEvent = app.events && app.events.length > 0 ? app.events[app.events.length - 1] : null;
-  const isTechnicalError = lastEvent && lastEvent.type === "SYSTEM_ERROR";
   const isClosed =
     app.status === ApplicationStatus.FINALIZED ||
     app.status === ApplicationStatus.ABANDONED;
   const showAdminLogs = role === "ADMIN";
   const hasOffer =
-    !isTechnicalError &&
     app.simulationResult && Object.keys(app.simulationResult).length > 0;
   const canSimulate = role === "CLIENT" && !isClosed;
+  const lastEvent = app.events && app.events.length > 0 ? app.events[app.events.length - 1] : null;
+  const isTechnicalError = lastEvent && lastEvent.type === "SYSTEM_ERROR";
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 animate-in fade-in duration-500">
@@ -401,7 +403,7 @@ export function ApplicationDetails() {
             </Card>
 
             {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
-            {hasOffer && (
+            {app.simulationResult && !isTechnicalError && (
               <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                 <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                   <CardTitle className="font-heading text-xl font-bold text-slate-800">
@@ -626,7 +628,7 @@ export function ApplicationDetails() {
               )}
 
               {/* Paso 3: Decisión de Oferta (Si tiene oferta generada) */}
-              {hasOffer && (
+              {app.simulationResult && !isTechnicalError && (
                 <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                   <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                     <CardTitle className="font-heading text-xl font-bold text-slate-800">
@@ -645,8 +647,7 @@ export function ApplicationDetails() {
                           <Button
                             className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
                             disabled={
-                              finalizeMutation.isPending ||
-                              !app.simulationResult?.success
+                              finalizeMutation.isPending
                             }
                             onClick={() => finalizeMutation.mutate()}
                           >
@@ -668,26 +669,9 @@ export function ApplicationDetails() {
                             ) : (
                               <XCircle className="mr-1.5 h-4.5 w-4.5" />
                             )}
-                            Rechazar Oferta
+                            Abandonar Solicitud
                           </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          className="w-full h-11 text-sm font-heading font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-800 rounded-lg transition-colors"
-                          disabled={updateMutation.isPending}
-                          onClick={() =>
-                            updateMutation.mutate({
-                              status: ApplicationStatus.IN_PROGRESS,
-                            })
-                          }
-                        >
-                          {updateMutation.isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Zap className="mr-1.5 h-4 w-4" />
-                          )}
-                          Modificar Condiciones (Simular otra vez)
-                        </Button>
                       </div>
                     )}
 
