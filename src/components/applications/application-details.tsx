@@ -326,15 +326,16 @@ export function ApplicationDetails() {
     }
   };
 
+  const lastEvent = app.events && app.events.length > 0 ? app.events[app.events.length - 1] : null;
+  const isTechnicalError = lastEvent && lastEvent.type === "SYSTEM_ERROR";
   const isClosed =
     app.status === ApplicationStatus.FINALIZED ||
     app.status === ApplicationStatus.ABANDONED;
   const showAdminLogs = role === "ADMIN";
   const hasOffer =
+    !isTechnicalError &&
     app.simulationResult && Object.keys(app.simulationResult).length > 0;
   const canSimulate = role === "CLIENT" && !isClosed;
-  const lastEvent = app.events && app.events.length > 0 ? app.events[app.events.length - 1] : null;
-  const isTechnicalError = lastEvent && lastEvent.type === "SYSTEM_ERROR";
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 animate-in fade-in duration-500">
