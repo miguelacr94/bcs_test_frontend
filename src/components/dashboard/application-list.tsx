@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { formatRadicationDate } from '@/lib/date-utils';
 import { Button } from '@/components/ui/button';
 import { Plus, Eye } from 'lucide-react';
 import Link from 'next/link';
@@ -108,7 +108,7 @@ export function ApplicationList({ statusFilter }: { statusFilter?: ApplicationSt
                   <TableCell className="font-semibold text-slate-700">{application.clientId}</TableCell>
                   <TableCell className="capitalize font-medium text-slate-500">{application.channel.toLowerCase()}</TableCell>
                   <TableCell className="text-slate-500 font-medium">
-                    {format(new Date(application.createdAt), 'dd/MM/yyyy HH:mm')}
+                    {formatRadicationDate(application.createdAt)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={`text-xs px-2.5 py-1 font-semibold rounded-lg border ${getStatusColor(application.status)}`}>

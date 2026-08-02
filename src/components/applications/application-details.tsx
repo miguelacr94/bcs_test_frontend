@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { formatRadicationDate } from "@/lib/date-utils";
 import { Loader2, Zap, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
@@ -195,7 +196,7 @@ export function ApplicationDetails() {
               Monto Pre-Aprobado
             </span>
             <div className="flex items-start justify-center gap-1">
-              <span className="text-xl font-bold text-slate-400 mt-2 font-heading">
+              <span className="text-xl font-bold text-slate-400  font-heading">
                 $
               </span>
               <span className="text-4xl md:text-2xl font-semibold text-slate-800 font-heading tracking-tight">
@@ -361,7 +362,7 @@ export function ApplicationDetails() {
                       Fecha Radicación
                     </p>
                     <p className="text-md font-semibold text-slate-800">
-                      {format(new Date(app.createdAt), "dd/MM/yyyy HH:mm")}
+                      {formatRadicationDate(app.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -470,7 +471,7 @@ export function ApplicationDetails() {
                       Fecha Radicación
                     </p>
                     <p className="text-md font-semibold text-slate-800">
-                      {format(new Date(app.createdAt), "dd/MM/yyyy HH:mm")}
+                      {formatRadicationDate(app.createdAt)}
                     </p>
                   </div>
                 </div>
