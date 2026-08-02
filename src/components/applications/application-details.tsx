@@ -140,7 +140,11 @@ export function ApplicationDetails() {
             <div>
               <span className="text-xs font-bold text-[#0066cc] uppercase tracking-wider">Detalles Generales</span>
               <CardTitle className="font-heading text-2xl font-extrabold mt-1 text-slate-800">Paso 1: Solicitud de Financiación</CardTitle>
-              <CardDescription className="text-xs font-mono mt-1 text-slate-400">ID: {app.id}</CardDescription>
+              {role === 'ADMIN' ? (
+                <CardDescription className="text-xs font-mono mt-1 text-slate-400">ID: {app.id}</CardDescription>
+              ) : (
+                <CardDescription className="text-xs font-medium mt-1 text-slate-400">Crédito de Libre Destino</CardDescription>
+              )}
             </div>
             <Badge
               className={`text-xs px-3.5 py-1.5 font-bold uppercase tracking-wider rounded-xl border ${
@@ -155,15 +159,17 @@ export function ApplicationDetails() {
             </Badge>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className={`grid grid-cols-1 ${role === 'ADMIN' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
               <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente (Documento)</p>
                 <p className="text-md font-bold text-slate-800 mt-1">{app.clientId}</p>
               </div>
-              <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Canal de Originación</p>
-                <p className="text-md font-bold text-slate-800 mt-1 capitalize">{app.channel.toLowerCase()}</p>
-              </div>
+              {role === 'ADMIN' && (
+                <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Canal de Originación</p>
+                  <p className="text-md font-bold text-slate-800 mt-1 capitalize">{app.channel.toLowerCase()}</p>
+                </div>
+              )}
               <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha Radicación</p>
                 <p className="text-md font-bold text-slate-800 mt-1">
