@@ -153,7 +153,7 @@ export function ApplicationForm() {
   const isWorking = validateMutation.isPending || createApplication.isPending || registerMutation.isPending;
 
   return (
-    <div className="bg-card rounded-2xl border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in slide-in-from-bottom-8">
+    <div className="bg-card rounded-lg border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in slide-in-from-bottom-8">
       <div className="text-center mb-8">
         <h2 className="font-heading text-xl font-bold text-slate-800 tracking-tight">
           {step === "VALIDATION" ? "Solicítalo aquí" : "Completa tu perfil"}

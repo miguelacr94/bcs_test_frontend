@@ -184,14 +184,14 @@ export function ApplicationDetails() {
     if (result.success) {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="flex items-center gap-2.5 text-emerald-800 bg-emerald-50/30 border border-emerald-100/50 rounded-xl p-3.5">
+          <div className="flex items-center gap-2.5 text-emerald-800 bg-emerald-50/30 border border-emerald-100/50 rounded-lg p-3.5">
             <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
             <p className="font-semibold text-sm leading-tight text-emerald-900">
               {result.message}
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-primary/[0.03] to-primary/[0.01] border border-primary/15 rounded-2xl p-6 text-center space-y-2.5 shadow-[0_4px_12px_rgba(0,102,204,0.02)]">
+          <div className="bg-gradient-to-br from-primary/[0.03] to-primary/[0.01] border border-primary/15 rounded-lg p-6 text-center space-y-2.5 shadow-[0_4px_12px_rgba(0,102,204,0.02)]">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Monto Pre-Aprobado
             </span>
@@ -209,7 +209,7 @@ export function ApplicationDetails() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-50/70 border border-slate-100/80 rounded-xl p-4 space-y-1.5 transition-all hover:bg-slate-50">
+            <div className="bg-slate-50/70 border border-slate-100/80 rounded-lg p-4 space-y-1.5 transition-all hover:bg-slate-50">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                 Cuota Mensual (Est.)
               </span>
@@ -217,7 +217,7 @@ export function ApplicationDetails() {
                 ${monthlyFee.toLocaleString("es-CO")}
               </p>
             </div>
-            <div className="bg-slate-50/70 border border-slate-100/80 rounded-xl p-4 space-y-1.5 transition-all hover:bg-slate-50">
+            <div className="bg-slate-50/70 border border-slate-100/80 rounded-lg p-4 space-y-1.5 transition-all hover:bg-slate-50">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                 Tasa de Interés
               </span>
@@ -228,7 +228,7 @@ export function ApplicationDetails() {
                 </span>
               </p>
             </div>
-            <div className="bg-slate-50/70 border border-slate-100/80 rounded-xl p-4 space-y-1.5 transition-all hover:bg-slate-50">
+            <div className="bg-slate-50/70 border border-slate-100/80 rounded-lg p-4 space-y-1.5 transition-all hover:bg-slate-50">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                 Plazo Autorizado
               </span>
@@ -245,14 +245,14 @@ export function ApplicationDetails() {
     } else {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="flex items-center gap-2.5 text-rose-800 bg-rose-50/30 border border-rose-100/50 rounded-xl p-3.5">
+          <div className="flex items-center gap-2.5 text-rose-800 bg-rose-50/30 border border-rose-100/50 rounded-lg p-3.5">
             <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
             <p className="font-semibold text-sm leading-tight text-rose-900">
               {result.message}
             </p>
           </div>
 
-          <div className="bg-slate-50/50 border border-border/40 rounded-xl p-5 space-y-5">
+          <div className="bg-slate-50/50 border border-border/40 rounded-lg p-5 space-y-5">
             <div className="text-center space-y-1.5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Monto Alternativo Disponible
@@ -317,7 +317,7 @@ export function ApplicationDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Paso 1: Resumen de la Solicitud */}
-            <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+            <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                 <div>
                   <CardTitle className="font-heading text-xl font-bold text-slate-800">
@@ -361,7 +361,7 @@ export function ApplicationDetails() {
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Fecha Radicación
                     </p>
-                    <p className="text-md font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-slate-800">
                       {formatRadicationDate(app.createdAt)}
                     </p>
                   </div>
@@ -371,7 +371,7 @@ export function ApplicationDetails() {
 
             {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
             {hasOffer && (
-              <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+              <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                 <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                   <CardTitle className="font-heading text-xl font-bold text-slate-800">
                     Resultado de Oferta
@@ -389,7 +389,7 @@ export function ApplicationDetails() {
 
           {/* Panel de Auditoría */}
           <div className="lg:col-span-1">
-            <Card className="h-full border border-border/30 shadow-none bg-slate-50/10 rounded-2xl overflow-hidden">
+            <Card className="h-full border border-border/30 shadow-none bg-slate-50/10 rounded-lg overflow-hidden">
               <CardHeader className="border-b border-border/20 bg-slate-50/20 pb-5 px-6 py-5">
                 <CardTitle className="font-heading text-lg font-bold text-slate-800">
                   Panel de Auditoría
@@ -434,7 +434,7 @@ export function ApplicationDetails() {
         >
           {/* Columna Izquierda: Información de Solicitud */}
           <div className="space-y-6">
-            <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+            <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                 <div>
                   <CardTitle className="font-heading text-xl font-bold text-slate-800">
@@ -484,7 +484,7 @@ export function ApplicationDetails() {
             <div className="space-y-6">
               {/* Paso 2: Generar Oferta (Si no tiene oferta y está abierta) */}
               {canSimulate && (
-                <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+                <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                   <CardHeader className="pb-4 px-6 pt-6">
                     <CardTitle className="font-heading text-xl font-bold text-slate-800">
                       Definir Condiciones
@@ -579,7 +579,7 @@ export function ApplicationDetails() {
 
               {/* Paso 3: Decisión de Oferta (Si tiene oferta generada) */}
               {hasOffer && (
-                <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+                <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                   <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                     <CardTitle className="font-heading text-xl font-bold text-slate-800">
                       Tu Oferta Comercial

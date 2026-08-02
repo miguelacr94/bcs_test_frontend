@@ -68,7 +68,7 @@ export function ApplicationList({ statusFilter }: { statusFilter?: ApplicationSt
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-border/40 overflow-hidden bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+      <div className="rounded-lg border border-border/40 overflow-hidden bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
         <Table>
           <TableHeader className="bg-slate-50/75 border-b border-border/30">
             <TableRow className="hover:bg-transparent">
