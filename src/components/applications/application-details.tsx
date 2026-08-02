@@ -130,39 +130,43 @@ export function ApplicationDetails() {
   }
 
   const isClosed = app.status === ApplicationStatus.FINALIZED || app.status === ApplicationStatus.ABANDONED;
-  const showAdminLogs = role === 'ADMIN';
-
-  return (
-    <div className={`grid grid-cols-1 ${showAdminLogs ? 'lg:grid-cols-3' : ''} gap-6`}>
-      <div className={`${showAdminLogs ? 'lg:col-span-2' : 'max-w-4xl mx-auto w-full'} space-y-6`}>
+  const showAdminLogs = role === 'ADMIN';  return (
+    <div className={`grid grid-cols-1 ${showAdminLogs ? 'lg:grid-cols-3' : ''} gap-8 max-w-7xl mx-auto w-full px-4 py-8`}>
+      <div className={`${showAdminLogs ? 'lg:col-span-2' : 'max-w-3xl mx-auto w-full'} space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500`}>
         
         {/* Paso 1: Resumen de la Solicitud */}
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <Card className="border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border/30 bg-slate-50/50">
             <div>
-              <CardTitle className="text-2xl font-bold">Paso 1: Detalles de Solicitud</CardTitle>
-              <CardDescription>ID: {app.id}</CardDescription>
+              <span className="text-xs font-bold text-[#0066cc] uppercase tracking-wider">Detalles Generales</span>
+              <CardTitle className="font-heading text-2xl font-extrabold mt-1 text-slate-800">Paso 1: Solicitud de Financiación</CardTitle>
+              <CardDescription className="text-xs font-mono mt-1 text-slate-400">ID: {app.id}</CardDescription>
             </div>
             <Badge
-              variant="outline"
-              className="text-sm px-3 py-1 uppercase"
+              className={`text-xs px-3.5 py-1.5 font-bold uppercase tracking-wider rounded-xl border ${
+                app.status === ApplicationStatus.FINALIZED
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : app.status === ApplicationStatus.ABANDONED
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-primary/5 text-primary border-primary/20'
+              }`}
             >
               {app.status}
             </Badge>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Cliente (Documento)</p>
-                <p className="text-lg font-semibold">{app.clientId}</p>
+          <CardContent className="pt-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente (Documento)</p>
+                <p className="text-md font-bold text-slate-800 mt-1">{app.clientId}</p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Canal</p>
-                <p className="text-lg font-semibold capitalize">{app.channel.toLowerCase()}</p>
+              <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Canal de Originación</p>
+                <p className="text-md font-bold text-slate-800 mt-1 capitalize">{app.channel.toLowerCase()}</p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Fecha de Creación</p>
-                <p className="text-lg font-semibold">
+              <div className="bg-secondary/40 p-4 rounded-2xl border border-border/20">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha Radicación</p>
+                <p className="text-md font-bold text-slate-800 mt-1">
                   {format(new Date(app.createdAt), 'dd/MM/yyyy HH:mm')}
                 </p>
               </div>
@@ -172,50 +176,51 @@ export function ApplicationDetails() {
 
         {/* Paso 2: Generar Oferta (Solo visible si no hay oferta y no está cerrada) */}
         {role === 'CLIENT' && (!app.simulationResult || Object.keys(app.simulationResult).length === 0) && !isClosed && (
-          <Card className="border-primary/50 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-            <CardHeader>
-              <CardTitle className="text-xl">Paso 2: Solicitar Oferta de Crédito</CardTitle>
-              <CardDescription>Ingresa el monto y el plazo para generar la oferta financiera.</CardDescription>
+          <Card className="border border-primary/20 shadow-[0_12px_40px_rgba(0,102,204,0.05)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+            <CardHeader className="pb-4">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">Análisis Financiero</span>
+              <CardTitle className="font-heading text-xl font-extrabold mt-1 text-slate-800">Paso 2: Generar Oferta de Crédito</CardTitle>
+              <CardDescription className="text-sm text-slate-500">Ingresa el monto solicitado y el plazo para validar tu oferta financiera personalizada.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Monto Solicitado</Label>
+                <div className="space-y-2.5">
+                  <Label htmlFor="amount" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Monto Solicitado</Label>
                   <Input 
                     id="amount" 
                     type="number" 
                     value={amount} 
-                    placeholder="Ej: 5000000"
+                    placeholder="Ej: 10000000"
                     onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="text-lg"
+                    className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl text-lg font-bold"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="termMonths">Plazo (meses)</Label>
+                <div className="space-y-2.5">
+                  <Label htmlFor="termMonths" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Plazo de Pago (Meses)</Label>
                   <Select 
                     onValueChange={(value) => setTermMonths(Number(value))}
                     value={termMonths ? String(termMonths) : undefined}
                   >
-                    <SelectTrigger className="text-lg">
+                    <SelectTrigger className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-md font-semibold text-slate-700">
                       <SelectValue placeholder="Selecciona el plazo" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="12">12 meses</SelectItem>
-                      <SelectItem value="24">24 meses</SelectItem>
-                      <SelectItem value="36">36 meses</SelectItem>
-                      <SelectItem value="48">48 meses</SelectItem>
-                      <SelectItem value="60">60 meses</SelectItem>
-                      <SelectItem value="72">72 meses</SelectItem>
+                    <SelectContent className="rounded-xl shadow-xl">
+                      <SelectItem value="12" className="rounded-lg">12 meses</SelectItem>
+                      <SelectItem value="24" className="rounded-lg">24 meses</SelectItem>
+                      <SelectItem value="36" className="rounded-lg">36 meses</SelectItem>
+                      <SelectItem value="48" className="rounded-lg">48 meses</SelectItem>
+                      <SelectItem value="60" className="rounded-lg">60 meses</SelectItem>
+                      <SelectItem value="72" className="rounded-lg">72 meses</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="mt-6 flex justify-end">
+              <div className="flex justify-end pt-2">
                 <Button 
                   onClick={() => simulateMutation.mutate()} 
                   disabled={simulateMutation.isPending || !amount || !termMonths}
-                  className="w-full md:w-auto text-md h-11 px-8"
+                  className="w-full md:w-auto h-12 px-8 bg-primary hover:bg-primary/95 text-white font-heading font-bold rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
                 >
                   {simulateMutation.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Zap className="mr-2 h-5 w-5" />}
                   Consultar Viabilidad
@@ -227,56 +232,73 @@ export function ApplicationDetails() {
 
         {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
         {app.simulationResult && Object.keys(app.simulationResult).length > 0 && (
-          <Card className="border-primary/20 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl">
+          <Card className="border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+            <CardHeader className="pb-6 border-b border-border/30 bg-slate-50/50">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">Simulación de Core</span>
+              <CardTitle className="font-heading text-xl font-extrabold mt-1 text-slate-800">
                 {role === 'CLIENT' ? 'Paso 3: Resultado de Oferta' : 'Resultado de Oferta Generada'}
               </CardTitle>
-              <CardDescription>Detalles de la viabilidad financiera.</CardDescription>
+              <CardDescription className="text-sm text-slate-500">Detalle de viabilidad y condiciones financieras pre-aprobadas.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="pt-6 space-y-6">
               {app.simulationResult.success && app.simulationResult.offerDetails ? (
-                <div className="bg-green-50 border border-green-200 p-6 rounded-xl space-y-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-6 w-6 text-green-600" />
-                    <p className="font-bold text-lg text-green-800">{app.simulationResult.message}</p>
+                <div className="bg-emerald-50/40 border border-emerald-100 p-6 rounded-2xl space-y-5 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
+                      <CheckCircle2 className="h-4.5 w-4.5" />
+                    </div>
+                    <p className="font-bold text-lg text-emerald-950 font-heading tracking-tight">{app.simulationResult.message}</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 bg-white/60 p-4 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white border border-emerald-100/50 p-5 rounded-xl shadow-sm">
                     <div>
-                      <p className="text-sm text-green-700 font-medium">Monto Aprobado</p>
-                      <p className="text-2xl font-bold text-green-900">${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}</p>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Monto Aprobado</p>
+                      <p className="text-3xl font-extrabold text-emerald-950 mt-1 font-heading tracking-tight">
+                        ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-green-700 font-medium">Tasa (N.M.V)</p>
-                      <p className="text-2xl font-bold text-green-900">{app.simulationResult.offerDetails.interestRate}%</p>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Tasa (N.M.V)</p>
+                      <p className="text-3xl font-extrabold text-emerald-950 mt-1 font-heading tracking-tight">
+                        {app.simulationResult.offerDetails.interestRate}%
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-green-700 font-medium">Plazo</p>
-                      <p className="text-2xl font-bold text-green-900">{app.simulationResult.offerDetails.termMonths} meses</p>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Plazo Autorizado</p>
+                      <p className="text-3xl font-extrabold text-emerald-950 mt-1 font-heading tracking-tight">
+                        {app.simulationResult.offerDetails.termMonths} <span className="text-sm font-bold text-emerald-700">meses</span>
+                      </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-red-50 border border-red-200 p-6 rounded-xl space-y-4">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-6 w-6 text-red-600" />
-                    <p className="font-bold text-lg text-red-800">{app.simulationResult.message}</p>
+                <div className="bg-rose-50/40 border border-rose-100 p-6 rounded-2xl space-y-5 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-rose-800">
+                      <AlertCircle className="h-4.5 w-4.5" />
+                    </div>
+                    <p className="font-bold text-lg text-rose-950 font-heading tracking-tight">{app.simulationResult.message}</p>
                   </div>
                   {app.simulationResult.offerDetails && (
-                    <div className="mt-4 bg-white/60 p-4 rounded-lg">
-                      <p className="text-sm font-semibold text-red-700 mb-2">Alternativa sugerida por el banco:</p>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white border border-rose-100/50 p-5 rounded-xl shadow-sm">
+                      <p className="text-xs font-bold text-rose-700 uppercase tracking-wider mb-3">Alternativa sugerida por el banco:</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                          <p className="text-xs text-red-700">Monto Máximo</p>
-                          <p className="font-bold text-red-900">${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}</p>
+                          <p className="text-xs font-semibold text-slate-400">Monto Máximo</p>
+                          <p className="text-2xl font-extrabold text-slate-800 mt-1 font-heading">
+                            ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-red-700">Tasa (N.M.V)</p>
-                          <p className="font-bold text-red-900">{app.simulationResult.offerDetails.interestRate}%</p>
+                          <p className="text-xs font-semibold text-slate-400">Tasa (N.M.V)</p>
+                          <p className="text-2xl font-extrabold text-slate-800 mt-1 font-heading">
+                            {app.simulationResult.offerDetails.interestRate}%
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-red-700">Plazo Asignado</p>
-                          <p className="font-bold text-red-900">{app.simulationResult.offerDetails.termMonths} meses</p>
+                          <p className="text-xs font-semibold text-slate-400">Plazo Sugerido</p>
+                          <p className="text-2xl font-extrabold text-slate-800 mt-1 font-heading">
+                            {app.simulationResult.offerDetails.termMonths} meses
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -285,9 +307,9 @@ export function ApplicationDetails() {
               )}
 
               {role === 'CLIENT' && !isClosed && (
-                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t">
+                <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/30">
                   <Button
-                    className="flex-1 h-12 text-md"
+                    className="flex-1 h-12 text-md font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-xl shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
                     disabled={finalizeMutation.isPending || (!app.simulationResult?.success)}
                     onClick={() => finalizeMutation.mutate()}
                   >
@@ -296,7 +318,7 @@ export function ApplicationDetails() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 h-12 text-md border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    className="flex-1 h-12 text-md font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors"
                     disabled={abandonMutation.isPending}
                     onClick={() => abandonMutation.mutate()}
                   >
@@ -312,14 +334,14 @@ export function ApplicationDetails() {
 
       {/* Bitácora de Eventos (Solo Admin) */}
       {showAdminLogs && (
-        <div className="lg:col-span-1">
-          <Card className="h-full bg-slate-50/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Panel de Auditoría</CardTitle>
-              <CardDescription>Trazabilidad técnica del proceso.</CardDescription>
+        <div className="lg:col-span-1 animate-in fade-in slide-in-from-right-8 duration-500">
+          <Card className="h-full border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+            <CardHeader className="border-b border-border/30 bg-slate-50/50 pb-6">
+              <CardTitle className="font-heading text-lg font-extrabold text-slate-800">Panel de Auditoría</CardTitle>
+              <CardDescription className="text-xs mt-1">Historial y trazabilidad técnica en tiempo real.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="relative border-l-2 border-slate-200 ml-3 pl-5 space-y-8">
+            <CardContent className="pt-6">
+              <div className="relative border-l-2 border-slate-200 ml-3 pl-6 space-y-6">
                 {!events?.length && <p className="text-sm text-muted-foreground">Sin eventos registrados.</p>}
                 
                 {[...(events || [])].reverse().map((eventObj, idx) => {
@@ -327,12 +349,12 @@ export function ApplicationDetails() {
                   const desc = eventObj.message;
 
                   return (
-                    <div key={idx} className="relative">
-                      <div className="absolute -left-[27px] top-1 h-4 w-4 rounded-full bg-slate-300 ring-4 ring-slate-50" />
-                      <p className="text-xs text-slate-500 font-medium">
+                    <div key={idx} className="relative group transition-all">
+                      <div className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full bg-slate-300 ring-4 ring-slate-100 group-hover:bg-[#0066cc] group-hover:ring-[#0066cc]/10 transition-all duration-300" />
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                         {format(date, 'dd/MM/yyyy HH:mm:ss')}
                       </p>
-                      <p className="text-sm font-medium leading-relaxed mt-1 text-slate-700">{desc}</p>
+                      <p className="text-sm font-medium leading-relaxed mt-1 text-slate-700 transition-colors group-hover:text-slate-900">{desc}</p>
                     </div>
                   );
                 })}

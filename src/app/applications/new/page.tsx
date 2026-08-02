@@ -12,11 +12,11 @@ export default function NewApplicationPage() {
       {/* Columna Izquierda: Información y Beneficios (Solo Desktop o arriba en Mobile) */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24 z-10">
         <div className="max-w-xl mx-auto md:mx-0">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0066cc] mb-4 tracking-tight leading-tight">
+          <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0066cc] mb-4 tracking-tight leading-none">
             Crédito Amigo <br className="hidden md:block" /> <span className="text-[#00a3ff]">Digital</span>
           </h1>
-          <p className="text-xl md:text-2xl text-slate-700 font-semibold mb-8 md:mb-12">
-            Solicita tu crédito de manera fácil y rápida
+          <p className="text-lg md:text-xl text-slate-600 font-medium mb-8 md:mb-12">
+            Solicita tu financiación de manera simple, rápida y 100% segura.
           </p>
 
           <div className="space-y-4 md:space-y-6">
