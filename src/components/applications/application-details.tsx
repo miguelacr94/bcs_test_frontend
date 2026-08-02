@@ -185,13 +185,13 @@ export function ApplicationDetails() {
 
         {/* Paso 2: Generar Oferta (Solo visible si no hay oferta y no está cerrada) */}
         {role === 'CLIENT' && (!app.simulationResult || Object.keys(app.simulationResult).length === 0) && !isClosed && (
-          <Card className="border border-border/30 shadow-none bg-white rounded-2xl overflow-hidden">
+          <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
             <CardHeader className="pb-4 px-6 pt-6">
               <CardTitle className="font-heading text-xl font-bold text-slate-800">Definir Condiciones</CardTitle>
               <CardDescription className="text-xs text-slate-500 mt-1">Ingresa el monto solicitado y el plazo para generar tu propuesta comercial.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Solicitado</Label>
                   <Input 
@@ -200,7 +200,7 @@ export function ApplicationDetails() {
                     value={amount} 
                     placeholder="Ej: 10000000"
                     onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="h-11 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl text-md font-semibold"
+                    className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg text-md font-semibold transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -209,16 +209,16 @@ export function ApplicationDetails() {
                     onValueChange={(value) => setTermMonths(Number(value))}
                     value={termMonths ? String(termMonths) : undefined}
                   >
-                    <SelectTrigger className="h-11 bg-transparent border-border hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-sm font-medium text-slate-700">
+                    <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-sm font-medium text-slate-700 transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]">
                       <SelectValue placeholder="Selecciona el plazo" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl shadow-xl">
-                      <SelectItem value="12" className="rounded-lg">12 meses</SelectItem>
-                      <SelectItem value="24" className="rounded-lg">24 meses</SelectItem>
-                      <SelectItem value="36" className="rounded-lg">36 meses</SelectItem>
-                      <SelectItem value="48" className="rounded-lg">48 meses</SelectItem>
-                      <SelectItem value="60" className="rounded-lg">60 meses</SelectItem>
-                      <SelectItem value="72" className="rounded-lg">72 meses</SelectItem>
+                    <SelectContent className="rounded-lg shadow-lg border border-primary/10">
+                      <SelectItem value="12" className="rounded-md">12 meses</SelectItem>
+                      <SelectItem value="24" className="rounded-md">24 meses</SelectItem>
+                      <SelectItem value="36" className="rounded-md">36 meses</SelectItem>
+                      <SelectItem value="48" className="rounded-md">48 meses</SelectItem>
+                      <SelectItem value="60" className="rounded-md">60 meses</SelectItem>
+                      <SelectItem value="72" className="rounded-md">72 meses</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -227,7 +227,7 @@ export function ApplicationDetails() {
                 <Button 
                   onClick={() => simulateMutation.mutate()} 
                   disabled={simulateMutation.isPending || !amount || !termMonths}
-                  className="w-full md:w-auto h-11 px-6 bg-primary hover:bg-primary/95 text-white font-heading font-semibold rounded-xl shadow-md shadow-primary/10 transition-all active:scale-[0.98]"
+                  className="w-full md:w-auto h-11 px-6 bg-primary hover:bg-primary/95 text-white font-heading font-semibold rounded-lg shadow-md shadow-primary/10 transition-all active:scale-[0.98]"
                 >
                   {simulateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-1.5 h-4 w-4" />}
                   Consultar Viabilidad
@@ -239,7 +239,7 @@ export function ApplicationDetails() {
 
         {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
         {app.simulationResult && Object.keys(app.simulationResult).length > 0 && (
-          <Card className="border border-border/30 shadow-none bg-white rounded-2xl overflow-hidden">
+          <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
             <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
               <CardTitle className="font-heading text-xl font-bold text-slate-800">
                 {role === 'CLIENT' ? 'Tu Oferta Comercial' : 'Resultado de Oferta'}
@@ -311,7 +311,7 @@ export function ApplicationDetails() {
               {role === 'CLIENT' && !isClosed && (
                 <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/25">
                   <Button
-                    className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-xl shadow-none transition-all active:scale-[0.98]"
+                    className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
                     disabled={finalizeMutation.isPending || (!app.simulationResult?.success)}
                     onClick={() => finalizeMutation.mutate()}
                   >
@@ -320,7 +320,7 @@ export function ApplicationDetails() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-xl transition-colors shadow-none"
+                    className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
                     disabled={abandonMutation.isPending}
                     onClick={() => abandonMutation.mutate()}
                   >

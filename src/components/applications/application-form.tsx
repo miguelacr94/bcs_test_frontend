@@ -154,12 +154,12 @@ export function ApplicationForm() {
   const isWorking = validateMutation.isPending || createApplication.isPending || registerMutation.isPending;
 
   return (
-    <div className="bg-card rounded-3xl border border-border/40 shadow-[0_24px_50px_-15px_rgba(0,0,0,0.06)] p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in slide-in-from-bottom-8">
+    <div className="bg-card rounded-2xl border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in slide-in-from-bottom-8">
       <div className="text-center mb-8">
-        <h2 className="font-heading text-2xl font-extrabold text-slate-800 tracking-tight">
+        <h2 className="font-heading text-xl font-bold text-slate-800 tracking-tight">
           {step === "VALIDATION" ? "Solicítalo aquí" : "Completa tu perfil"}
         </h2>
-        <p className="text-sm text-slate-500 mt-1.5 font-medium">
+        <p className="text-xs text-slate-500 mt-1 font-medium">
           {step === "VALIDATION" ? "Ingresa tus datos para comenzar" : "Completa los siguientes campos"}
         </p>
       </div>
@@ -168,22 +168,22 @@ export function ApplicationForm() {
         <Form {...validationForm}>
           <form
             onSubmit={validationForm.handleSubmit(onValidate)}
-            className="space-y-5 animate-in fade-in zoom-in-95 duration-300"
+            className="flex flex-col space-y-4 animate-in fade-in zoom-in-95 duration-300"
           >
             <FormField
               control={validationForm.control}
               name="documentType"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-slate-700 font-medium transition-colors">
+                      <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-slate-700 font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]">
                         <SelectValue placeholder="Tipo de documento" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="rounded-xl shadow-xl">
-                      <SelectItem value="CC" className="rounded-lg">Cédula de Ciudadanía</SelectItem>
-                      <SelectItem value="CE" className="rounded-lg">Cédula de Extranjería</SelectItem>
+                    <SelectContent className="rounded-lg shadow-lg border border-primary/10">
+                      <SelectItem value="CC" className="rounded-md">Cédula de Ciudadanía</SelectItem>
+                      <SelectItem value="CE" className="rounded-md">Cédula de Extranjería</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -195,11 +195,11 @@ export function ApplicationForm() {
               control={validationForm.control}
               name="document"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormControl>
                     <Input 
                       placeholder="Número de documento" 
-                      className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl font-medium transition-colors"
+                      className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]"
                       {...field} 
                     />
                   </FormControl>
@@ -212,22 +212,21 @@ export function ApplicationForm() {
               control={validationForm.control}
               name="terms"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md py-3">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
                   <FormControl>
                     <input
                       type="checkbox"
-                      className="mt-1 h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary accent-primary cursor-pointer transition-colors"
+                      className="mt-0.5 h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary accent-primary cursor-pointer transition-colors"
                       checked={field.value}
                       onChange={field.onChange}
                     />
                   </FormControl>
-                  <div className="space-y-1 leading-tight">
-                    <FormLabel className="text-xs font-medium text-slate-500 select-none cursor-pointer">
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-[11px] font-medium text-slate-500 select-none cursor-pointer">
                       He leído y acepto el{" "}
                       <a href="#" className="text-primary hover:underline font-semibold">
                         tratamiento de datos personales
-                      </a>{" "}
-                      para los fines previstos en la autorización.
+                      </a>
                     </FormLabel>
                     <FormMessage />
                   </div>
@@ -238,10 +237,10 @@ export function ApplicationForm() {
             <Button
               type="submit"
               disabled={isWorking}
-              className="w-full h-13 bg-primary hover:bg-primary/95 text-white rounded-xl text-md font-semibold font-heading shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+              className="w-full h-11 bg-primary hover:bg-primary/95 text-white rounded-lg text-sm font-semibold font-heading shadow-md shadow-primary/20 transition-all active:scale-[0.98]"
             >
               {isWorking ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 "Iniciar solicitud"
               )}
@@ -256,14 +255,14 @@ export function ApplicationForm() {
             onSubmit={registrationForm.handleSubmit(onRegister)}
             className="space-y-5 animate-in fade-in slide-in-from-right-8 duration-500"
           >
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={registrationForm.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Nombres" className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl font-medium transition-colors" {...field} />
+                      <Input placeholder="Nombres" className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -275,7 +274,31 @@ export function ApplicationForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Apellidos" className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl font-medium transition-colors" {...field} />
+                      <Input placeholder="Apellidos" className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={registrationForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input type="email" placeholder="Correo electrónico" className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={registrationForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input type="tel" placeholder="Número de celular" className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -283,37 +306,11 @@ export function ApplicationForm() {
               />
             </div>
 
-            <FormField
-              control={registrationForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input type="email" placeholder="Correo electrónico" className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl font-medium transition-colors" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={registrationForm.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input type="tel" placeholder="Número de celular" className="h-12 bg-transparent border-border hover:border-primary/50 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary rounded-xl font-medium transition-colors" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-2">
               <Button
                 type="button"
                 variant="ghost"
-                className="flex-[0.4] h-12 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-secondary transition-colors"
+                className="flex-[0.35] h-11 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-secondary transition-colors"
                 onClick={() => setStep("VALIDATION")}
                 disabled={isWorking}
               >
@@ -322,10 +319,10 @@ export function ApplicationForm() {
               <Button
                 type="submit"
                 disabled={isWorking}
-                className="flex-1 h-12 bg-primary hover:bg-primary/95 text-white rounded-xl text-md font-semibold font-heading shadow-md shadow-primary/10 transition-all active:scale-[0.98]"
+                className="flex-1 h-11 bg-primary hover:bg-primary/95 text-white rounded-lg text-sm font-semibold font-heading shadow-md shadow-primary/10 transition-all active:scale-[0.98]"
               >
                 {isWorking ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Continuar"
                 )}
