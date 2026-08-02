@@ -330,7 +330,6 @@ export function ApplicationDetails() {
     app.status === ApplicationStatus.ABANDONED;
   const showAdminLogs = role === "ADMIN";
   const hasOffer =
-    app.status === ApplicationStatus.VALIDATED &&
     app.simulationResult && Object.keys(app.simulationResult).length > 0;
   const canSimulate = role === "CLIENT" && !isClosed;
 
@@ -672,6 +671,30 @@ export function ApplicationDetails() {
                           )}
                           Modificar Condiciones (Simular otra vez)
                         </Button>
+                      </div>
+                    )}
+
+                    {role === "CLIENT" && isClosed && app.status === ApplicationStatus.FINALIZED && (
+                      <div className="pt-6 border-t border-border/25 text-center space-y-3 animate-in fade-in duration-300">
+                        <div className="inline-flex items-center justify-center p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100/50">
+                          <CheckCircle2 className="h-5 w-5 mr-2 text-emerald-600" />
+                          <span className="text-sm font-bold font-heading">Oferta Aceptada y Crédito Radicado</span>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Tu solicitud ha sido finalizada con éxito. Nos pondremos en contacto contigo pronto para formalizar el desembolso.
+                        </p>
+                      </div>
+                    )}
+
+                    {role === "CLIENT" && isClosed && app.status === ApplicationStatus.ABANDONED && (
+                      <div className="pt-6 border-t border-border/25 text-center space-y-3 animate-in fade-in duration-300">
+                        <div className="inline-flex items-center justify-center p-2 bg-rose-50 text-rose-700 rounded-lg border border-rose-100/50">
+                          <XCircle className="h-5 w-5 mr-2 text-rose-600" />
+                          <span className="text-sm font-bold font-heading">Solicitud Cancelada</span>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Esta solicitud ha sido rechazada o abandonada por el usuario.
+                        </p>
                       </div>
                     )}
                   </CardContent>
