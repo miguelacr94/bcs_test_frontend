@@ -131,238 +131,353 @@ export function ApplicationDetails() {
 
   const isClosed = app.status === ApplicationStatus.FINALIZED || app.status === ApplicationStatus.ABANDONED;
   const showAdminLogs = role === 'ADMIN';
+  const hasOffer = app.simulationResult && Object.keys(app.simulationResult).length > 0;
+  const canSimulate = role === 'CLIENT' && (!app.simulationResult || Object.keys(app.simulationResult).length === 0) && !isClosed;
 
   return (
-    <div className={`grid grid-cols-1 ${showAdminLogs ? 'lg:grid-cols-3' : ''} gap-8 max-w-7xl mx-auto w-full px-4 py-8`}>
-      <div className={`${showAdminLogs ? 'lg:col-span-2' : 'max-w-2xl mx-auto w-full'} space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500`}>
-        
-        {/* Paso 1: Resumen de la Solicitud */}
-        <Card className="border border-border/30 shadow-none bg-white rounded-2xl overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border/20 bg-slate-50/20 px-6 py-5">
-            <div>
-              <CardTitle className="font-heading text-xl font-bold text-slate-800">
-                {role === 'CLIENT' ? 'Solicitud de Crédito' : 'Detalles de la Solicitud'}
-              </CardTitle>
-              {role === 'ADMIN' ? (
-                <CardDescription className="text-xs font-mono mt-0.5 text-slate-400">ID: {app.id}</CardDescription>
-              ) : (
-                <CardDescription className="text-xs font-medium mt-0.5 text-slate-400">Crédito de Libre Destino</CardDescription>
-              )}
-            </div>
-            <Badge
-              className={`text-[10px] px-2.5 py-1 font-bold uppercase tracking-wider rounded-lg border shadow-none ${
-                app.status === ApplicationStatus.FINALIZED
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                  : app.status === ApplicationStatus.ABANDONED
-                  ? 'bg-rose-50 text-rose-700 border-rose-100'
-                  : 'bg-primary/5 text-primary border-primary/10'
-              }`}
-            >
-              {app.status}
-            </Badge>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className={`grid grid-cols-1 ${role === 'ADMIN' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente (Documento)</p>
-                <p className="text-md font-semibold text-slate-800">{app.clientId}</p>
-              </div>
-              {role === 'ADMIN' && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Canal de Originación</p>
-                  <p className="text-md font-semibold text-slate-800 capitalize">{app.channel.toLowerCase()}</p>
+    <div className="max-w-7xl mx-auto w-full px-4 py-8 animate-in fade-in duration-500">
+      {showAdminLogs ? (
+        /* VISTA ADMINISTRADOR (Diseño de 3 columnas en escritorio) */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Paso 1: Resumen de la Solicitud */}
+            <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border/20 bg-slate-50/20 px-6 py-5">
+                <div>
+                  <CardTitle className="font-heading text-xl font-bold text-slate-800">
+                    Detalles de la Solicitud
+                  </CardTitle>
+                  <CardDescription className="text-xs font-mono mt-0.5 text-slate-400">ID: {app.id}</CardDescription>
                 </div>
-              )}
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fecha Radicación</p>
-                <p className="text-md font-semibold text-slate-800">
-                  {format(new Date(app.createdAt), 'dd/MM/yyyy HH:mm')}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Paso 2: Generar Oferta (Solo visible si no hay oferta y no está cerrada) */}
-        {role === 'CLIENT' && (!app.simulationResult || Object.keys(app.simulationResult).length === 0) && !isClosed && (
-          <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
-            <CardHeader className="pb-4 px-6 pt-6">
-              <CardTitle className="font-heading text-xl font-bold text-slate-800">Definir Condiciones</CardTitle>
-              <CardDescription className="text-xs text-slate-500 mt-1">Ingresa el monto solicitado y el plazo para generar tu propuesta comercial.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Solicitado</Label>
-                  <Input 
-                    id="amount" 
-                    type="number" 
-                    value={amount} 
-                    placeholder="Ej: 10000000"
-                    onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg text-md font-semibold transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="termMonths" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo de Pago</Label>
-                  <Select 
-                    onValueChange={(value) => setTermMonths(Number(value))}
-                    value={termMonths ? String(termMonths) : undefined}
-                  >
-                    <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-sm font-medium text-slate-700 transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]">
-                      <SelectValue placeholder="Selecciona el plazo" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-lg shadow-lg border border-primary/10">
-                      <SelectItem value="12" className="rounded-md">12 meses</SelectItem>
-                      <SelectItem value="24" className="rounded-md">24 meses</SelectItem>
-                      <SelectItem value="36" className="rounded-md">36 meses</SelectItem>
-                      <SelectItem value="48" className="rounded-md">48 meses</SelectItem>
-                      <SelectItem value="60" className="rounded-md">60 meses</SelectItem>
-                      <SelectItem value="72" className="rounded-md">72 meses</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex justify-end pt-2">
-                <Button 
-                  onClick={() => simulateMutation.mutate()} 
-                  disabled={simulateMutation.isPending || !amount || !termMonths}
-                  className="w-full md:w-auto h-11 px-6 bg-primary hover:bg-primary/95 text-white font-heading font-semibold rounded-lg shadow-md shadow-primary/10 transition-all active:scale-[0.98]"
+                <Badge
+                  className={`text-[10px] px-2.5 py-1 font-bold uppercase tracking-wider rounded-lg border shadow-none ${
+                    app.status === ApplicationStatus.FINALIZED
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                      : app.status === ApplicationStatus.ABANDONED
+                      ? 'bg-rose-50 text-rose-700 border-rose-100'
+                      : 'bg-primary/5 text-primary border-primary/10'
+                  }`}
                 >
-                  {simulateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-1.5 h-4 w-4" />}
-                  Consultar Viabilidad
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
-        {app.simulationResult && Object.keys(app.simulationResult).length > 0 && (
-          <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
-            <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
-              <CardTitle className="font-heading text-xl font-bold text-slate-800">
-                {role === 'CLIENT' ? 'Tu Oferta Comercial' : 'Resultado de Oferta'}
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500 mt-1">Condiciones pre-aprobadas válidas para radicación.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {app.simulationResult.success && app.simulationResult.offerDetails ? (
-                <div className="space-y-6 animate-in fade-in duration-300">
-                  <div className="flex items-center gap-2 text-emerald-800">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                    <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
+                  {app.status}
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente (Documento)</p>
+                    <p className="text-md font-semibold text-slate-800">{app.clientId}</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-border/20">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Aprobado</p>
-                      <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                        ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa (N.M.V)</p>
-                      <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                        {app.simulationResult.offerDetails.interestRate}%
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo Autorizado</p>
-                      <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
-                        {app.simulationResult.offerDetails.termMonths} meses
-                      </p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Canal de Originación</p>
+                    <p className="text-md font-semibold text-slate-800 capitalize">{app.channel.toLowerCase()}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fecha Radicación</p>
+                    <p className="text-md font-semibold text-slate-800">
+                      {format(new Date(app.createdAt), 'dd/MM/yyyy HH:mm')}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-6 animate-in fade-in duration-300">
-                  <div className="flex items-center gap-2 text-rose-800">
-                    <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
-                    <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
-                  </div>
-                  {app.simulationResult.offerDetails && (
-                    <div className="pt-4 border-t border-border/20 space-y-4">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativa sugerida:</p>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              </CardContent>
+            </Card>
+
+            {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
+            {hasOffer && (
+              <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+                <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
+                  <CardTitle className="font-heading text-xl font-bold text-slate-800">Resultado de Oferta</CardTitle>
+                  <CardDescription className="text-xs text-slate-500 mt-1">Condiciones pre-aprobadas válidas para radicación.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {app.simulationResult.success && app.simulationResult.offerDetails ? (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 text-emerald-800">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                        <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-border/20">
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-slate-400">Monto Máximo</p>
-                          <p className="text-xl font-bold text-slate-800 font-heading">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Aprobado</p>
+                          <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
                             ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-slate-400">Tasa (N.M.V)</p>
-                          <p className="text-xl font-bold text-slate-800 font-heading">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa (N.M.V)</p>
+                          <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
                             {app.simulationResult.offerDetails.interestRate}%
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-slate-400">Plazo Sugerido</p>
-                          <p className="text-xl font-bold text-slate-800 font-heading">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo Autorizado</p>
+                          <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
                             {app.simulationResult.offerDetails.termMonths} meses
                           </p>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {role === 'CLIENT' && !isClosed && (
-                <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/25">
-                  <Button
-                    className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
-                    disabled={finalizeMutation.isPending || (!app.simulationResult?.success)}
-                    onClick={() => finalizeMutation.mutate()}
-                  >
-                    {finalizeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-4.5 w-4.5" />}
-                    Aceptar Oferta
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
-                    disabled={abandonMutation.isPending}
-                    onClick={() => abandonMutation.mutate()}
-                  >
-                    {abandonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-1.5 h-4.5 w-4.5" />}
-                    Rechazar Oferta
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Bitácora de Eventos (Solo Admin) */}
-      {showAdminLogs && (
-        <div className="lg:col-span-1 animate-in fade-in slide-in-from-right-8 duration-500">
-          <Card className="h-full border border-border/30 shadow-none bg-slate-50/10 rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-border/20 bg-slate-50/20 pb-5 px-6 py-5">
-              <CardTitle className="font-heading text-lg font-bold text-slate-800">Panel de Auditoría</CardTitle>
-              <CardDescription className="text-xs mt-0.5">Historial técnico del proceso.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 px-6">
-              <div className="relative border-l border-slate-200 ml-3 pl-6 space-y-6">
-                {!events?.length && <p className="text-sm text-muted-foreground">Sin eventos registrados.</p>}
-                
-                {[...(events || [])].reverse().map((eventObj, idx) => {
-                  const date = new Date(eventObj.timestamp);
-                  const desc = eventObj.message;
-
-                  return (
-                    <div key={idx} className="relative group transition-all">
-                      <div className="absolute -left-[30.5px] top-1.5 h-2 w-2 rounded-full bg-slate-300 group-hover:bg-[#0066cc] transition-all duration-300" />
-                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">
-                        {format(date, 'dd/MM/yyyy HH:mm:ss')}
-                      </p>
-                      <p className="text-sm font-medium leading-relaxed mt-1 text-slate-600 transition-colors group-hover:text-slate-900">{desc}</p>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 text-rose-800">
+                        <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+                        <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
+                      </div>
+                      {app.simulationResult.offerDetails && (
+                        <div className="pt-4 border-t border-border/20 space-y-4">
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativa sugerida:</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-slate-400">Monto Máximo</p>
+                              <p className="text-xl font-bold text-slate-800 font-heading">
+                                ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-slate-400">Tasa (N.M.V)</p>
+                              <p className="text-xl font-bold text-slate-800 font-heading">
+                                {app.simulationResult.offerDetails.interestRate}%
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-slate-400">Plazo Sugerido</p>
+                              <p className="text-xl font-bold text-slate-800 font-heading">
+                                {app.simulationResult.offerDetails.termMonths} meses
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Panel de Auditoría */}
+          <div className="lg:col-span-1">
+            <Card className="h-full border border-border/30 shadow-none bg-slate-50/10 rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-border/20 bg-slate-50/20 pb-5 px-6 py-5">
+                <CardTitle className="font-heading text-lg font-bold text-slate-800">Panel de Auditoría</CardTitle>
+                <CardDescription className="text-xs mt-0.5">Historial técnico del proceso.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 px-6">
+                <div className="relative border-l border-slate-200 ml-3 pl-6 space-y-6">
+                  {!events?.length && <p className="text-sm text-muted-foreground">Sin eventos registrados.</p>}
+                  
+                  {[...(events || [])].reverse().map((eventObj, idx) => {
+                    const date = new Date(eventObj.timestamp);
+                    const desc = eventObj.message;
+
+                    return (
+                      <div key={idx} className="relative group transition-all">
+                        <div className="absolute -left-[30.5px] top-1.5 h-2 w-2 rounded-full bg-slate-300 group-hover:bg-[#0066cc] transition-all duration-300" />
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">
+                          {format(date, 'dd/MM/yyyy HH:mm:ss')}
+                        </p>
+                        <p className="text-sm font-medium leading-relaxed mt-1 text-slate-600 transition-colors group-hover:text-slate-900">{desc}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        /* VISTA CLIENTE (Diseño de 2 columnas lado a lado en escritorio, aprovechando el espacio) */
+        <div className={`grid grid-cols-1 ${(hasOffer || canSimulate) ? 'lg:grid-cols-2' : 'max-w-2xl mx-auto'} gap-8 items-start`}>
+          {/* Columna Izquierda: Información de Solicitud */}
+          <div className="space-y-6">
+            <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-border/20 bg-slate-50/20 px-6 py-5">
+                <div>
+                  <CardTitle className="font-heading text-xl font-bold text-slate-800">
+                    Solicitud de Crédito
+                  </CardTitle>
+                  <CardDescription className="text-xs font-medium mt-0.5 text-slate-400">Crédito de Libre Destino</CardDescription>
+                </div>
+                <Badge
+                  className={`text-[10px] px-2.5 py-1 font-bold uppercase tracking-wider rounded-lg border shadow-none ${
+                    app.status === ApplicationStatus.FINALIZED
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                      : app.status === ApplicationStatus.ABANDONED
+                      ? 'bg-rose-50 text-rose-700 border-rose-100'
+                      : 'bg-primary/5 text-primary border-primary/10'
+                  }`}
+                >
+                  {app.status}
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente (Documento)</p>
+                    <p className="text-md font-semibold text-slate-800">{app.clientId}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fecha Radicación</p>
+                    <p className="text-md font-semibold text-slate-800">
+                      {format(new Date(app.createdAt), 'dd/MM/yyyy HH:mm')}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Columna Derecha: Formulario de Viabilidad u Oferta Pre-aprobada */}
+          {(hasOffer || canSimulate) && (
+            <div className="space-y-6">
+              {/* Paso 2: Generar Oferta (Si no tiene oferta y está abierta) */}
+              {canSimulate && (
+                <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+                  <CardHeader className="pb-4 px-6 pt-6">
+                    <CardTitle className="font-heading text-xl font-bold text-slate-800">Definir Condiciones</CardTitle>
+                    <CardDescription className="text-xs text-slate-500 mt-1">Ingresa el monto solicitado y el plazo para generar tu propuesta comercial.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Solicitado</Label>
+                        <Input 
+                          id="amount" 
+                          type="number" 
+                          value={amount} 
+                          placeholder="Ej: 10000000"
+                          onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                          className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg text-md font-semibold transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="termMonths" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo de Pago</Label>
+                        <Select 
+                          onValueChange={(value) => setTermMonths(Number(value))}
+                          value={termMonths ? String(termMonths) : undefined}
+                        >
+                          <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-sm font-medium text-slate-700 transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]">
+                            <SelectValue placeholder="Selecciona el plazo" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-lg shadow-lg border border-primary/10">
+                            <SelectItem value="12" className="rounded-md">12 meses</SelectItem>
+                            <SelectItem value="24" className="rounded-md">24 meses</SelectItem>
+                            <SelectItem value="36" className="rounded-md">36 meses</SelectItem>
+                            <SelectItem value="48" className="rounded-md">48 meses</SelectItem>
+                            <SelectItem value="60" className="rounded-md">60 meses</SelectItem>
+                            <SelectItem value="72" className="rounded-md">72 meses</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <Button 
+                        onClick={() => simulateMutation.mutate()} 
+                        disabled={simulateMutation.isPending || !amount || !termMonths}
+                        className="w-full h-11 px-6 bg-primary hover:bg-primary/95 text-white font-heading font-semibold rounded-lg shadow-md shadow-primary/10 transition-all active:scale-[0.98]"
+                      >
+                        {simulateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-1.5 h-4 w-4" />}
+                        Consultar Viabilidad
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Paso 3: Decisión de Oferta (Si tiene oferta generada) */}
+              {hasOffer && (
+                <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-2xl overflow-hidden">
+                  <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
+                    <CardTitle className="font-heading text-xl font-bold text-slate-800">Tu Oferta Comercial</CardTitle>
+                    <CardDescription className="text-xs text-slate-500 mt-1">Condiciones pre-aprobadas válidas para radicación.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-6">
+                    {app.simulationResult.success && app.simulationResult.offerDetails ? (
+                      <div className="space-y-6 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-emerald-800">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                          <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-border/20">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monto Aprobado</p>
+                            <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
+                              ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa (N.M.V)</p>
+                            <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
+                              {app.simulationResult.offerDetails.interestRate}%
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plazo Autorizado</p>
+                            <p className="text-2xl font-extrabold text-slate-800 font-heading tracking-tight">
+                              {app.simulationResult.offerDetails.termMonths} meses
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2 text-rose-800">
+                          <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+                          <p className="font-semibold text-sm leading-tight">{app.simulationResult.message}</p>
+                        </div>
+                        {app.simulationResult.offerDetails && (
+                          <div className="pt-4 border-t border-border/20 space-y-4">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alternativa sugerida:</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-slate-400">Monto Máximo</p>
+                                <p className="text-xl font-bold text-slate-800 font-heading">
+                                  ${app.simulationResult.offerDetails.approvedAmount.toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-slate-400">Tasa (N.M.V)</p>
+                                <p className="text-xl font-bold text-slate-800 font-heading">
+                                  {app.simulationResult.offerDetails.interestRate}%
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-slate-400">Plazo Sugerido</p>
+                                <p className="text-xl font-bold text-slate-800 font-heading">
+                                  {app.simulationResult.offerDetails.termMonths} meses
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {role === 'CLIENT' && !isClosed && (
+                      <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/25">
+                        <Button
+                          className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
+                          disabled={finalizeMutation.isPending || (!app.simulationResult?.success)}
+                          onClick={() => finalizeMutation.mutate()}
+                        >
+                          {finalizeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1.5 h-4.5 w-4.5" />}
+                          Aceptar Oferta
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
+                          disabled={abandonMutation.isPending}
+                          onClick={() => abandonMutation.mutate()}
+                        >
+                          {abandonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-1.5 h-4.5 w-4.5" />}
+                          Rechazar Oferta
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
