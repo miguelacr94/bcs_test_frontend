@@ -332,10 +332,7 @@ export function ApplicationDetails() {
   const hasOffer =
     app.status === ApplicationStatus.VALIDATED &&
     app.simulationResult && Object.keys(app.simulationResult).length > 0;
-  const canSimulate =
-    role === "CLIENT" &&
-    (app.status === ApplicationStatus.IN_PROGRESS || app.status === ApplicationStatus.PENDING_VALIDATION) &&
-    !isClosed;
+  const canSimulate = role === "CLIENT" && !isClosed;
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 animate-in fade-in duration-500">
