@@ -5,8 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { applicationService, ApplicationStatus } from "@/services/application.service";
-import { customerService } from "@/services/customer.service";
+import { applicationRepository, customerRepository, ApplicationStatus } from "@/infrastructure/repositories";
 import { useRouter } from "next/navigation";
 import {
   Form,
@@ -64,7 +63,7 @@ export function ApplicationForm() {
   // Mutación para Crear Solicitud (Directa, siempre Autogestionado)
   const createApplication = useMutation({
     mutationFn: (clientId: string) =>
-      applicationService.create({ clientId, channel: "Autogestionado" }),
+      applicationRepository.create({ clientId, channel: "Autogestionado" }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast({
@@ -85,13 +84,13 @@ export function ApplicationForm() {
 
   // Mutación para Validar (Si existe, busca si tiene solicitud activa. Si no, pasa a registro)
   const validateMutation = useMutation({
-    mutationFn: (doc: string) => customerService.validateCustomer(doc),
+    mutationFn: (doc: string) => customerRepository.validateCustomer(doc),
     onSuccess: async (customerData, doc) => {
       setDocument(doc);
       if (customerData) {
         try {
           // Cliente existe, consultar si ya tiene una solicitud activa en proceso
-          const appsResult = await applicationService.findAll({ clientId: customerData.document });
+          const appsResult = await applicationRepository.findAll({ clientId: customerData.document });
           const activeApp = appsResult.data?.find(
             (app) =>
               app.status === ApplicationStatus.IN_PROGRESS ||
@@ -129,7 +128,7 @@ export function ApplicationForm() {
   // Mutación para Registrar
   const registerMutation = useMutation({
     mutationFn: (data: z.infer<typeof registrationSchema> & { document: string }) =>
-      customerService.create(data),
+      customerRepository.create(data),
     onSuccess: (newCustomer) => {
       // Cliente creado, crear solicitud
       createApplication.mutate(newCustomer.document);

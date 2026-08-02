@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { applicationService, ApplicationStatus } from '@/services/application.service';
+import { applicationRepository, ApplicationStatus } from '@/infrastructure/repositories';
 import {
   Table,
   TableBody,
@@ -49,7 +49,7 @@ const getStatusLabel = (status: ApplicationStatus) => {
 export function ApplicationList({ statusFilter }: { statusFilter?: ApplicationStatus } = {}) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['applications', statusFilter],
-    queryFn: () => applicationService.findAll(statusFilter ? { status: statusFilter } : {}),
+    queryFn: () => applicationRepository.findAll(statusFilter ? { status: statusFilter } : {}),
   });
 
   return (
@@ -62,7 +62,7 @@ export function ApplicationList({ statusFilter }: { statusFilter?: ApplicationSt
           </p>
         </div>
         <Link href="/applications/new">
-          <Button className="h-10 rounded-xl bg-primary hover:bg-primary/95 text-white font-heading font-bold shadow-md shadow-primary/10 transition-all active:scale-[0.98]">
+          <Button className="h-10 rounded-lg bg-primary hover:bg-primary/95 text-white font-heading font-bold shadow-md shadow-primary/10 transition-all active:scale-[0.98]">
             <Plus className="mr-2 h-4.5 w-4.5" /> Nueva Solicitud
           </Button>
         </Link>
