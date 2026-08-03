@@ -25,6 +25,7 @@ export interface Application {
 export interface CreateApplicationDto {
   clientId: string;
   channel: string;
+  offerResult?: any;
 }
 
 export interface UpdateApplicationDto {

@@ -6,7 +6,7 @@ import {
   applicationRepository,
   ApplicationStatus,
 } from "@/infrastructure/repositories";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { formatRadicationDate } from "@/lib/date-utils";
-import { Loader2, Zap, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, Zap, CheckCircle2, XCircle, AlertCircle, Clock, Shield, Phone, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useRole } from "@/providers/role-provider";
@@ -43,6 +43,7 @@ import {
 export function ApplicationDetails() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { role } = useRole();
@@ -685,15 +686,89 @@ export function ApplicationDetails() {
                       </div>
                     )}
 
+                    {role === "CLIENT" && isClosed && app.status === ApplicationStatus.PENDING_VALIDATION && (
+                      <div className="pt-6 border-t border-border/25 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Cabecera de estado */}
+                        <div className="text-center space-y-2">
+                          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 border border-amber-100 mx-auto">
+                            <Shield className="h-6 w-6 text-amber-600" />
+                          </div>
+                          <h3 className="text-base font-heading font-bold text-slate-800">
+                            Tu solicitud está en estudio
+                          </h3>
+                          <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                            Hemos recibido tu solicitud exitosamente. Nuestro equipo de analistas está realizando el estudio crediticio correspondiente.
+                          </p>
+                        </div>
+
+                        {/* Pasos del proceso */}
+                        <div className="bg-slate-50/70 rounded-lg border border-slate-100 p-4 space-y-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proceso de validación</p>
+                          <div className="space-y-2.5">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center mt-0.5">
+                                <CheckCircle2 className="h-3 w-3 text-amber-600" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-slate-700">Solicitud radicada</p>
+                                <p className="text-[10px] text-slate-400">Tu oferta ha sido registrada y aceptada en el sistema.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-400 border border-amber-500 flex items-center justify-center mt-0.5">
+                                <Clock className="h-3 w-3 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-amber-700">Estudio de crédito en curso</p>
+                                <p className="text-[10px] text-slate-400">Validación de perfil crediticio, centrales de riesgo e historial financiero.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center mt-0.5">
+                                <Phone className="h-3 w-3 text-slate-400" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-slate-400">Toma de datos adicionales</p>
+                                <p className="text-[10px] text-slate-400">Un asesor se comunicará contigo para validar la información requerida.</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center mt-0.5">
+                                <FileText className="h-3 w-3 text-slate-400" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-slate-400">Resolución final</p>
+                                <p className="text-[10px] text-slate-400">Recibirás la respuesta definitiva de tu solicitud de crédito.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Nota informativa */}
+                        <div className="flex items-start gap-2.5 bg-amber-50/60 border border-amber-100 rounded-lg p-3">
+                          <Phone className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                            Próximamente un asesor se comunicará contigo para continuar con el proceso. Mantén tu teléfono disponible y revisa tu correo electrónico.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {role === "CLIENT" && isClosed && app.status === ApplicationStatus.ABANDONED && (
-                      <div className="pt-6 border-t border-border/25 text-center space-y-3 animate-in fade-in duration-300">
+                      <div className="pt-6 border-t border-border/25 text-center space-y-4 animate-in fade-in duration-300">
                         <div className="inline-flex items-center justify-center p-2 bg-rose-50 text-rose-700 rounded-lg border border-rose-100/50">
                           <XCircle className="h-5 w-5 mr-2 text-rose-600" />
                           <span className="text-sm font-bold font-heading">Solicitud Cancelada</span>
                         </div>
                         <p className="text-xs text-slate-500 font-medium">
-                          Esta solicitud ha sido rechazada o abandonada por el usuario.
+                          Esta solicitud ha sido abandonada. Si deseas continuar, debes iniciar una nueva solicitud.
                         </p>
+                        <Button
+                          onClick={() => router.push("/")}
+                          className="w-full h-10 text-xs font-semibold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md transition-all active:scale-[0.98]"
+                        >
+                          Volver al Inicio
+                        </Button>
                       </div>
                     )}
                   </CardContent>

@@ -65,6 +65,8 @@ export function ApplicationForm() {
   const [simTerm, setSimTerm] = useState<number>(36);
   const [offerResult, setOfferResult] = useState<any | null>(null);
   const [evaluationLoading, setEvaluationLoading] = useState(false);
+  // Indica si el cliente ya estaba registrado en la DB (solo necesita crear la aplicación)
+  const [isExistingCustomer, setIsExistingCustomer] = useState(false);
 
   const validationForm = useForm<z.infer<typeof validationSchema>>({
     resolver: zodResolver(validationSchema),
@@ -128,7 +130,13 @@ export function ApplicationForm() {
         });
         router.push(`/applications/${status.activeApplicationId}`);
       } else {
-        createApplicationDirect.mutate(doc);
+        // Tiene perfil registrado pero no tiene aplicación: ir a evaluación de oferta
+        setIsExistingCustomer(true);
+        toast({
+          title: "Perfil encontrado",
+          description: "Consulta tu oferta para continuar con la solicitud.",
+        });
+        setStep("EVALUATION");
       }
     },
     onError: () => {
@@ -240,15 +248,39 @@ export function ApplicationForm() {
   };
 
   const handleApply = () => {
-    if (!localRegistrationData || !offerResult || offerResult.type === "ERROR_TECNICO") return;
-    
-    applyTransactionMutation.mutate({
-      customerData: {
-        ...localRegistrationData,
-        document,
-      },
-      offerResult,
-    });
+    if (!offerResult || offerResult.type === "ERROR_TECNICO") return;
+
+    if (isExistingCustomer) {
+      // Cliente ya registrado: solo crear la aplicación con la oferta
+      applicationRepository.create({
+        clientId: document,
+        channel: "Autogestionado",
+        offerResult,
+      }).then((data) => {
+        queryClient.invalidateQueries({ queryKey: ["applications"] });
+        toast({
+          title: "¡Solicitud creada con éxito!",
+          description: "La oferta ha sido asignada a tu solicitud.",
+        });
+        router.push(`/applications/${data.id}`);
+      }).catch((error: any) => {
+        toast({
+          title: "Error al crear la solicitud",
+          description: error.response?.data?.message || "No se pudo radicar la solicitud.",
+          variant: "destructive",
+        });
+      });
+    } else {
+      // Cliente nuevo: registrar cliente y crear aplicación en una sola transacción
+      if (!localRegistrationData) return;
+      applyTransactionMutation.mutate({
+        customerData: {
+          ...localRegistrationData,
+          document,
+        },
+        offerResult,
+      });
+    }
   };
 
   const isWorking =
