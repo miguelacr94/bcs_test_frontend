@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Layers, UserCircle } from 'lucide-react';
 import { useRole, Role } from '@/providers/role-provider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 export function Navbar() {
   const { role, setRole } = useRole();
@@ -20,18 +20,31 @@ export function Navbar() {
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
-            <div className="flex items-center gap-3 bg-secondary/80 px-3 py-1.5 rounded-lg border border-border/50 shadow-sm">
-              <UserCircle className="h-5 w-5 text-[#0066cc]" />
-              <Select value={role} onValueChange={(val) => setRole(val as Role)}>
-                <SelectTrigger className="h-7 w-[110px] text-xs bg-transparent border-0 shadow-none focus:ring-0 focus:ring-offset-0 px-1 py-0 font-semibold text-slate-700">
-                  <SelectValue placeholder="Rol" />
-                </SelectTrigger>
-                <SelectContent className="rounded-lg shadow-xl">
-                  <SelectItem value="CLIENT" className="rounded-lg">Cliente</SelectItem>
-                  <SelectItem value="ADMIN" className="rounded-lg">Administrador</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {role === 'ADMIN' ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-secondary/80 px-3 py-1.5 rounded-lg border border-border/50 shadow-sm">
+                  <UserCircle className="h-5 w-5 text-[#0066cc]" />
+                  <span className="text-sm font-semibold text-slate-700">Admin</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem("auth_token");
+                    setRole('CLIENT');
+                    window.location.href = "/login";
+                  }}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/login"
+                className="text-sm font-semibold text-slate-500 hover:text-[#0066cc] transition-colors"
+              >
+                Acceso Administrador
+              </Link>
+            )}
           </nav>
         </div>
       </div>

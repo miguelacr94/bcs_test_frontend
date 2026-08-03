@@ -49,7 +49,12 @@ const registrationSchema = z.object({
 
 type Step = "VALIDATION" | "REGISTRATION" | "EVALUATION";
 
-export function ApplicationForm() {
+interface ApplicationFormProps {
+  mode?: 'client' | 'admin';
+  onSuccess?: (applicationId: string) => void;
+}
+
+export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormProps = {}) {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -78,17 +83,27 @@ export function ApplicationForm() {
     defaultValues: { name: "", lastName: "", email: "", phone: "" },
   });
 
+  const channel = mode === 'admin' ? 'Asistido' : 'Autogestionado';
+
+  const handleApplicationSuccess = (applicationId: string) => {
+    queryClient.invalidateQueries({ queryKey: ["applications"] });
+    if (onSuccess) {
+      onSuccess(applicationId);
+    } else {
+      router.push(`/status/${applicationId}`);
+    }
+  };
+
   // Mutación para Crear Solicitud Directa (cuando el usuario ya existe en la DB)
   const createApplicationDirect = useMutation({
     mutationFn: (clientId: string) =>
-      applicationRepository.create({ clientId, channel: "Autogestionado" }),
+      applicationRepository.create({ clientId, channel }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast({
         title: "¡Solicitud en proceso!",
         description: "Iniciando análisis de viabilidad...",
       });
-      router.push(`/applications/${data.id}`);
+      handleApplicationSuccess(data.id);
     },
     onError: (error: any) => {
       const msg = error.response?.data?.message?.[0] || error.message;
@@ -124,11 +139,15 @@ export function ApplicationForm() {
 
       // 3. Si existe en la base de datos local (Customer)
       if (status.activeApplicationId) {
+        const toastDesc =
+          mode === 'admin'
+            ? "Redirigiendo al detalle de la solicitud existente."
+            : "Te estamos redirigiendo para que continúes con tu proceso.";
         toast({
           title: "¡Solicitud en curso encontrada!",
-          description: "Te estamos redirigiendo para que continúes con tu proceso.",
+          description: toastDesc,
         });
-        router.push(`/applications/${status.activeApplicationId}`);
+        handleApplicationSuccess(status.activeApplicationId);
       } else {
         // Tiene perfil registrado pero no tiene aplicación: ir a evaluación de oferta
         setIsExistingCustomer(true);
@@ -150,15 +169,14 @@ export function ApplicationForm() {
 
   // Mutación Transaccional Única: Aplicar (Envía todo el JSON junto al Backend)
   const applyTransactionMutation = useMutation({
-    mutationFn: (payload: { customerData: z.infer<typeof registrationSchema> & { document: string }; offerResult: any }) =>
+    mutationFn: (payload: { customerData: z.infer<typeof registrationSchema> & { document: string; channel: string }; offerResult: any }) =>
       customerRepository.applyTransaction(payload),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast({
         title: "¡Solicitud Creada con Éxito!",
         description: "El cliente ha sido registrado y la oferta asignada.",
       });
-      router.push(`/applications/${data.application.id}`);
+      handleApplicationSuccess(data.application.id);
     },
     onError: (error: any) => {
       toast({
@@ -254,15 +272,14 @@ export function ApplicationForm() {
       // Cliente ya registrado: solo crear la aplicación con la oferta
       applicationRepository.create({
         clientId: document,
-        channel: "Autogestionado",
+        channel,
         offerResult,
       }).then((data) => {
-        queryClient.invalidateQueries({ queryKey: ["applications"] });
         toast({
           title: "¡Solicitud creada con éxito!",
           description: "La oferta ha sido asignada a tu solicitud.",
         });
-        router.push(`/applications/${data.id}`);
+        handleApplicationSuccess(data.id);
       }).catch((error: any) => {
         toast({
           title: "Error al crear la solicitud",
@@ -277,6 +294,7 @@ export function ApplicationForm() {
         customerData: {
           ...localRegistrationData,
           document,
+          channel,
         },
         offerResult,
       });

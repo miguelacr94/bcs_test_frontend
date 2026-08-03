@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminValidationPanel } from "./admin-validation-panel";
 
 export function ApplicationDetails() {
   const params = useParams();
@@ -47,6 +48,9 @@ export function ApplicationDetails() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { role } = useRole();
+  
+  // Helper function to prevent TypeScript from narrowing role type
+  const getRole = (): "CLIENT" | "ADMIN" => role;
 
   const [isSimulateOpen, setIsSimulateOpen] = useState(false);
   const [amount, setAmount] = useState<number | "">("");
@@ -68,7 +72,7 @@ export function ApplicationDetails() {
   const { data: events } = useQuery({
     queryKey: ["application-events", id],
     queryFn: () => applicationRepository.getEvents(id),
-    enabled: !!id && role === "ADMIN",
+    enabled: !!id && getRole() === "ADMIN",
   });
 
   const simulateMutation = useMutation({
@@ -111,7 +115,10 @@ export function ApplicationDetails() {
   });
 
   const acceptOfferMutation = useMutation({
-    mutationFn: () => applicationRepository.acceptOffer(id),
+    mutationFn: () => applicationRepository.acceptOffer(
+      id,
+      getRole() === 'ADMIN' ? 'Asistido' : undefined
+    ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["application", id] });
       queryClient.invalidateQueries({ queryKey: ["application-events", id] });
@@ -131,7 +138,11 @@ export function ApplicationDetails() {
 
   const abandonMutation = useMutation({
     mutationFn: (reason: string) =>
-      applicationRepository.abandon(id, reason),
+      applicationRepository.abandon(
+        id,
+        reason,
+        getRole() === 'ADMIN' ? 'Asistido' : undefined
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["application", id] });
       queryClient.invalidateQueries({ queryKey: ["application-events", id] });
@@ -335,7 +346,7 @@ export function ApplicationDetails() {
     app.status === ApplicationStatus.FINALIZED ||
     app.status === ApplicationStatus.ABANDONED ||
     app.status === ApplicationStatus.PENDING_VALIDATION;
-  const showAdminLogs = role === "ADMIN";
+  const showAdminLogs = getRole() === "ADMIN";
   const hasOffer =
     app.offerResult && Object.keys(app.offerResult).length > 0;
   const canSimulate = false; // Ya no se pueden simular más ofertas desde el detalle
@@ -356,7 +367,7 @@ export function ApplicationDetails() {
                     Detalles de la Solicitud
                   </CardTitle>
                   <CardDescription className="text-xs font-mono mt-0.5 text-slate-400">
-                    ID: {app.id}
+                    Radicado: {app.radicado}
                   </CardDescription>
                 </div>
                 <Badge
@@ -414,11 +425,50 @@ export function ApplicationDetails() {
                     Condiciones pre-aprobadas válidas para radicación.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-6 space-y-6">
                   {renderOfferDetails(app.offerResult)}
+
+                  {/* Acciones del Admin sobre la oferta cuando está En Proceso */}
+                  {app.status === ApplicationStatus.IN_PROGRESS && (
+                    <div className="space-y-3 pt-6 border-t border-border/25">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Acciones sobre la oferta
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
+                          disabled={acceptOfferMutation.isPending}
+                          onClick={() => setIsAcceptDialogOpen(true)}
+                        >
+                          {acceptOfferMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="mr-1.5 h-4.5 w-4.5" />
+                          )}
+                          Aceptar Oferta
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex-1 h-11 text-sm font-heading font-semibold border-red-200 text-red-600 hover:bg-red-50/50 hover:text-red-700 rounded-lg transition-colors shadow-none"
+                          disabled={abandonMutation.isPending}
+                          onClick={() => setIsAbandonDialogOpen(true)}
+                        >
+                          {abandonMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="mr-1.5 h-4.5 w-4.5" />
+                          )}
+                          Abandonar Solicitud
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
+
+            {/* Panel de Validación (Admin) */}
+            <AdminValidationPanel application={app} />
           </div>
 
           {/* Panel de Auditoría */}
@@ -441,18 +491,46 @@ export function ApplicationDetails() {
                   )}
 
                   {[...(events || [])].reverse().map((eventObj, idx) => {
-                    const date = new Date(eventObj.timestamp);
+                    let date: Date | null = null;
+                    let formattedDate = 'Fecha no disponible';
+                    
+                    // Parse createdAt field (ISO format from backend)
+                    if (eventObj.createdAt) {
+                      try {
+                        date = new Date(eventObj.createdAt);
+                        if (date && !isNaN(date.getTime())) {
+                          formattedDate = format(date, "dd/MM/yyyy HH:mm:ss");
+                        }
+                      } catch (e) {
+                        console.warn('Invalid date format:', eventObj.createdAt, e);
+                      }
+                    }
+                    
                     const desc = eventObj.message;
+                    const hasStatusTransition = eventObj.previousStatus && eventObj.nextStatus && eventObj.previousStatus !== eventObj.nextStatus;
 
                     return (
                       <div key={idx} className="relative group transition-all">
                         <div className="absolute -left-[30.5px] top-1.5 h-2 w-2 rounded-full bg-slate-300 group-hover:bg-[#0066cc] transition-all duration-300" />
                         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">
-                          {format(date, "dd/MM/yyyy HH:mm:ss")}
+                          {formattedDate}
                         </p>
-                        <p className="text-sm font-medium leading-relaxed mt-1 text-slate-600 transition-colors group-hover:text-slate-900">
-                          {desc}
-                        </p>
+                        <div className="mt-1">
+                          <p className="text-sm font-medium leading-relaxed text-slate-600 transition-colors group-hover:text-slate-900">
+                            {desc}
+                          </p>
+                          {hasStatusTransition && (
+                            <div className="mt-1 flex items-center gap-2 text-xs">
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-medium">
+                                {eventObj.previousStatus}
+                              </span>
+                              <span className="text-slate-400">→</span>
+                              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-medium">
+                                {eventObj.nextStatus}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -640,7 +718,7 @@ export function ApplicationDetails() {
                   <CardContent className="p-6 space-y-6">
                     {renderOfferDetails(app.offerResult)}
 
-                    {role === "CLIENT" && !isClosed && (
+                    {getRole() === "CLIENT" && !isClosed && (
                       <div className="space-y-3 pt-6 border-t border-border/25">
                         <div className="flex flex-col sm:flex-row gap-4">
                           <Button
@@ -674,7 +752,7 @@ export function ApplicationDetails() {
                       </div>
                     )}
 
-                    {role === "CLIENT" && isClosed && app.status === ApplicationStatus.FINALIZED && (
+                    {getRole() === "CLIENT" && isClosed && app.status === ApplicationStatus.FINALIZED && (
                       <div className="pt-6 border-t border-border/25 text-center space-y-3 animate-in fade-in duration-300">
                         <div className="inline-flex items-center justify-center p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100/50">
                           <CheckCircle2 className="h-5 w-5 mr-2 text-emerald-600" />
@@ -686,7 +764,7 @@ export function ApplicationDetails() {
                       </div>
                     )}
 
-                    {role === "CLIENT" && isClosed && app.status === ApplicationStatus.PENDING_VALIDATION && (
+                    {getRole() === "CLIENT" && isClosed && app.status === ApplicationStatus.PENDING_VALIDATION && (
                       <div className="pt-6 border-t border-border/25 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* Cabecera de estado */}
                         <div className="text-center space-y-2">
@@ -754,7 +832,7 @@ export function ApplicationDetails() {
                       </div>
                     )}
 
-                    {role === "CLIENT" && isClosed && app.status === ApplicationStatus.ABANDONED && (
+                    {getRole() === "CLIENT" && isClosed && app.status === ApplicationStatus.ABANDONED && (
                       <div className="pt-6 border-t border-border/25 text-center space-y-4 animate-in fade-in duration-300">
                         <div className="inline-flex items-center justify-center p-2 bg-rose-50 text-rose-700 rounded-lg border border-rose-100/50">
                           <XCircle className="h-5 w-5 mr-2 text-rose-600" />

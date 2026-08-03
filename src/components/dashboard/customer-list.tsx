@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  applicationRepository,
-  ApplicationStatus,
-} from "@/infrastructure/repositories";
+import { customerRepository } from "@/infrastructure/repositories";
 import {
   Table,
   TableBody,
@@ -25,52 +22,50 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Eye, Search, Filter } from "lucide-react";
-import Link from "next/link";
+import { Search, Filter } from "lucide-react";
 
-const getStatusColor = (status: ApplicationStatus) => {
-  switch (status) {
-    case ApplicationStatus.IN_PROGRESS:
-      return "bg-blue-50 text-blue-700 border-blue-200/80";
-    case ApplicationStatus.PENDING_VALIDATION:
-      return "bg-amber-50 text-amber-700 border-amber-200/80";
-    case ApplicationStatus.FINALIZED:
+const getStatusColor = (status: string) => {
+  switch (status?.toUpperCase()) {
+    case "ACTIVE":
       return "bg-emerald-50 text-emerald-700 border-emerald-200/80";
-    case ApplicationStatus.ABANDONED:
+    case "INACTIVE":
+      return "bg-slate-50 text-slate-700 border-slate-200/80";
+    case "PENDING":
+      return "bg-amber-50 text-amber-700 border-amber-200/80";
+    case "BLOCKED":
       return "bg-rose-50 text-rose-700 border-rose-200/80";
     default:
       return "bg-slate-50 text-slate-700 border-slate-200/80";
   }
 };
 
-const getStatusLabel = (status: ApplicationStatus | string) => {
-  switch (status) {
-    case ApplicationStatus.IN_PROGRESS:
-      return "En Proceso";
-    case ApplicationStatus.PENDING_VALIDATION:
-      return "Pendiente Validación";
-    case ApplicationStatus.FINALIZED:
-      return "Finalizada";
-    case ApplicationStatus.ABANDONED:
-      return "Abandonada";
+const getStatusLabel = (status: string) => {
+  switch (status?.toUpperCase()) {
+    case "ACTIVE":
+      return "Activo";
+    case "INACTIVE":
+      return "Inactivo";
+    case "PENDING":
+      return "Pendiente";
+    case "BLOCKED":
+      return "Bloqueado";
     default:
-      return status;
+      return status || "Desconocido";
   }
 };
 
-export function ApplicationList({
-  statusFilter: initialStatusFilter,
-  adminMode = false,
-}: { statusFilter?: ApplicationStatus; adminMode?: boolean } = {}) {
+export function CustomerList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [status, setStatus] = useState<string>(initialStatusFilter || "ALL");
+  const [status, setStatus] = useState<string>("ALL");
+  const [channel, setChannel] = useState<string>("ALL");
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["applications", status, searchTerm],
+    queryKey: ["customers", status, channel, searchTerm],
     queryFn: () =>
-      applicationRepository.findAll({
+      customerRepository.findAll({
         ...(status !== "ALL" && { status }),
-        ...(searchTerm && { clientId: searchTerm }),
+        ...(channel !== "ALL" && { channel }),
+        ...(searchTerm && { searchTerm }),
       }),
   });
 
@@ -79,48 +74,54 @@ export function ApplicationList({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-heading text-2xl font-extrabold text-slate-800 tracking-tight">
-            Solicitudes Digitales
+            Clientes
           </h2>
           <p className="text-sm font-medium text-slate-500 mt-1">
-            Gestiona las solicitudes de crédito de libre destino y su
-            trazabilidad.
+            Gestiona la información de los clientes registrados.
           </p>
         </div>
-        
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 bg-slate-50/50 p-4 rounded-lg border border-border/40">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Buscar por documento del cliente..."
+            placeholder="Buscar por documento, nombre o email..."
             className="pl-9 bg-white border-slate-200"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="w-full sm:w-[200px]">
+        <div className="w-full sm:w-[180px]">
           <Select value={status} onValueChange={(val) => setStatus(val || 'ALL')}>
             <SelectTrigger className="bg-white border-slate-200">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-slate-400" />
-                <SelectValue placeholder="Filtrar por estado" />
+                <SelectValue placeholder="Estado" />
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Todos los estados</SelectItem>
-              <SelectItem value={ApplicationStatus.IN_PROGRESS}>
-                En Proceso
-              </SelectItem>
-              <SelectItem value={ApplicationStatus.PENDING_VALIDATION}>
-                Pendiente Validación
-              </SelectItem>
-              <SelectItem value={ApplicationStatus.FINALIZED}>
-                Finalizada
-              </SelectItem>
-              <SelectItem value={ApplicationStatus.ABANDONED}>
-                Abandonada
-              </SelectItem>
+              <SelectItem value="ALL">Todos</SelectItem>
+              <SelectItem value="ACTIVE">Activo</SelectItem>
+              <SelectItem value="INACTIVE">Inactivo</SelectItem>
+              <SelectItem value="PENDING">Pendiente</SelectItem>
+              <SelectItem value="BLOCKED">Bloqueado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full sm:w-[180px]">
+          <Select value={channel} onValueChange={(val) => setChannel(val || 'ALL')}>
+            <SelectTrigger className="bg-white border-slate-200">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-slate-400" />
+                <SelectValue placeholder="Canal" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Todos</SelectItem>
+              <SelectItem value="DIGITAL">Digital</SelectItem>
+              <SelectItem value="PHYSICAL">Físico</SelectItem>
+              <SelectItem value="CALL_CENTER">Call Center</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -130,9 +131,6 @@ export function ApplicationList({
         <Table>
           <TableHeader className="bg-slate-50/75 border-b border-border/30">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-semibold text-slate-600 h-12">
-                Radicado
-              </TableHead>
               <TableHead className="font-semibold text-slate-600 h-12">
                 Cliente
               </TableHead>
@@ -145,76 +143,68 @@ export function ApplicationList({
               <TableHead className="font-semibold text-slate-600 h-12">
                 Estado
               </TableHead>
-              <TableHead className="font-semibold text-slate-600 h-12 text-right">
-                Acciones
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={4}
                   className="text-center h-32 text-slate-400 font-medium"
                 >
-                  Cargando solicitudes...
+                  Cargando clientes...
                 </TableCell>
               </TableRow>
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={4}
                   className="text-center h-32 text-rose-500 font-medium"
                 >
-                  Error al cargar las solicitudes. Verifica la conexión con el
-                  servidor.
+                  Error al cargar los clientes. Verifica la conexión con el servidor.
                 </TableCell>
               </TableRow>
             ) : data?.data.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={4}
                   className="text-center h-32 text-slate-400 font-medium"
                 >
-                  No hay solicitudes registradas.
+                  No hay clientes registrados.
                 </TableCell>
               </TableRow>
             ) : (
-              data?.data.map((application) => (
+              data?.data.map((customer) => (
                 <TableRow
-                  key={application.id}
+                  key={customer.id}
                   className="hover:bg-slate-50/45 transition-colors border-b border-border/20"
                 >
-                  <TableCell className="font-semibold text-slate-700">
-                    {application.radicado}
-                  </TableCell>
-                  <TableCell className="font-semibold text-slate-700">
-                    {application.clientId}
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-slate-700">
+                        {customer.name} {customer.lastName}
+                      </span>
+                      <span className="text-sm text-slate-500">
+                        {customer.document}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {customer.email}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="capitalize font-medium text-slate-500">
-                    {application.channel.toLowerCase()}
+                    {customer.channel?.toLowerCase() || '-'}
                   </TableCell>
                   <TableCell className="text-slate-500 font-medium">
-                    {formatRadicationDate(application.createdAt)}
+                    {formatRadicationDate(customer.createdAt)}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className={`text-xs px-2.5 py-1 font-semibold rounded-lg border ${getStatusColor(application.status)}`}
+                      className={`text-xs px-2.5 py-1 font-semibold rounded-lg border ${getStatusColor(customer.status || '')}`}
                     >
-                      {getStatusLabel(application.status)}
+                      {getStatusLabel(customer.status || '')}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Link href={adminMode ? `/admin/applications/${application.id}` : `/status/${application.id}`}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 px-3 rounded-lg text-[#0066cc] hover:text-[#0052a3] hover:bg-secondary font-semibold"
-                      >
-                        <Eye className="mr-1.5 h-4 w-4" /> Ver Detalles
-                      </Button>
-                    </Link>
                   </TableCell>
                 </TableRow>
               ))

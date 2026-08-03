@@ -6,6 +6,8 @@ export interface Customer {
   email: string;
   phone: string;
   createdAt: string;
+  channel?: string;
+  status?: string;
 }
 
 export interface CreateCustomerDto {

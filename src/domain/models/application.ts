@@ -6,14 +6,19 @@ export enum ApplicationStatus {
 }
 
 export interface ApplicationEvent {
+  _id?: string;
+  offerId?: string;
   type: string;
   message: string;
-  timestamp: string;
+  createdAt: string;
+  previousStatus?: string;
+  nextStatus?: string;
   metadata?: any;
 }
 
 export interface Application {
   id: string;
+  radicado: string;
   clientId: string;
   channel: string;
   status: ApplicationStatus;

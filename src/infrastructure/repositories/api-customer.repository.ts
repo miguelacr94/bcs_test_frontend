@@ -30,4 +30,14 @@ export class ApiCustomerRepository implements ICustomerRepository {
     const response = await api.post<any>('/customers/apply', data);
     return response.data;
   }
+
+  async findAll(filters?: { status?: string; channel?: string; searchTerm?: string }): Promise<{ data: Customer[] }> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.channel) params.append('channel', filters.channel);
+    if (filters?.searchTerm) params.append('searchTerm', filters.searchTerm);
+    
+    const response = await api.get<{ data: Customer[] }>(`/customers?${params.toString()}`);
+    return response.data;
+  }
 }

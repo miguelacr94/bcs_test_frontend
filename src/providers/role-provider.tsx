@@ -24,6 +24,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const setRole = (newRole: Role) => {
     setRoleState(newRole);
     localStorage.setItem('app_role', newRole);
+    document.cookie = `app_role=${newRole}; path=/; max-age=86400; SameSite=lax`;
   };
 
   return (

@@ -7,6 +7,20 @@ export const api = axios.create({
   },
 });
 
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Interceptor to handle global backend wrappers and errors
 api.interceptors.response.use(
   (response) => {
@@ -18,7 +32,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // You can handle global errors here
+    // Handle 401 errors - clear token and redirect to login
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );

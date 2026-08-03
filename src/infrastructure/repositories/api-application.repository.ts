@@ -35,18 +35,28 @@ export class ApiApplicationRepository implements IApplicationRepository {
     return response.data;
   }
 
-  async acceptOffer(id: string): Promise<Application> {
-    const response = await api.post<Application>(`/applications/${id}/accept-offer`);
+  async acceptOffer(id: string, channel?: string): Promise<Application> {
+    const response = await api.post<Application>(`/applications/${id}/accept-offer`, { channel });
     return response.data;
   }
 
-  async abandon(id: string, reason: string): Promise<Application> {
-    const response = await api.post<Application>(`/applications/${id}/abandon`, { reason });
+  async abandon(id: string, reason: string, channel?: string): Promise<Application> {
+    const response = await api.post<Application>(`/applications/${id}/abandon`, { reason, channel });
     return response.data;
   }
 
   async getEvents(id: string): Promise<ApplicationEvent[]> {
     const response = await api.get<ApplicationEvent[]>(`/applications/${id}/events`);
+    return response.data;
+  }
+
+  async validate(id: string, validationData: any, channel?: string): Promise<any> {
+    const response = await api.post(`/applications/${id}/validate`, { ...validationData, channel });
+    return response.data;
+  }
+
+  async finalize(id: string, withDisbursement: boolean, channel?: string): Promise<any> {
+    const response = await api.post(`/applications/${id}/finalize`, { withDisbursement, channel });
     return response.data;
   }
 }
