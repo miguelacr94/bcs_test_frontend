@@ -13,7 +13,7 @@ export interface IApplicationRepository {
   findById(id: string): Promise<Application>;
   update(id: string, data: UpdateApplicationDto): Promise<Application>;
   simulateOffer(id: string, amount: number, termMonths: number): Promise<Application>;
-  finalize(id: string): Promise<Application>;
+  acceptOffer(id: string): Promise<Application>;
   abandon(id: string, reason: string): Promise<Application>;
   getEvents(id: string): Promise<ApplicationEvent[]>;
 }

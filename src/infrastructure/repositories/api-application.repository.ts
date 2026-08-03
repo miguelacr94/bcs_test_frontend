@@ -35,8 +35,8 @@ export class ApiApplicationRepository implements IApplicationRepository {
     return response.data;
   }
 
-  async finalize(id: string): Promise<Application> {
-    const response = await api.post<Application>(`/applications/${id}/finalize`);
+  async acceptOffer(id: string): Promise<Application> {
+    const response = await api.post<Application>(`/applications/${id}/accept-offer`);
     return response.data;
   }
 

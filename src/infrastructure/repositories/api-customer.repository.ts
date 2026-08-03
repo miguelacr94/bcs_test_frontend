@@ -25,4 +25,9 @@ export class ApiCustomerRepository implements ICustomerRepository {
     const response = await api.post<Customer>('/customers', data);
     return response.data;
   }
+
+  async applyTransaction(data: { customerData: CreateCustomerDto; offerResult: any }): Promise<{ success: boolean; customer: Customer; application: any }> {
+    const response = await api.post<any>('/customers/apply', data);
+    return response.data;
+  }
 }

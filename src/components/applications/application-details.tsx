@@ -51,6 +51,7 @@ export function ApplicationDetails() {
   const [amount, setAmount] = useState<number | "">("");
   const [termMonths, setTermMonths] = useState<number | "">("");
   const [isAbandonDialogOpen, setIsAbandonDialogOpen] = useState(false);
+  const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false);
   const [abandonReason, setAbandonReason] = useState("");
 
   const {
@@ -79,12 +80,12 @@ export function ApplicationDetails() {
     onSuccess: (data) => {
       queryClient.setQueryData(['application', id], (old) => ({
         ...(old as any),
-        simulationResult: data.simulationResult,
+        offerResult: data.offerResult,
       }));
       queryClient.invalidateQueries({ queryKey: ['application-events', id] });
       setIsSimulateOpen(false);
 
-      if (data.simulationResult?.success) {
+      if (data.offerResult?.success) {
         toast({
           title: 'Oferta Generada',
           description: 'Se ha generado una oferta viable exitosamente.',
@@ -92,7 +93,7 @@ export function ApplicationDetails() {
       } else {
         toast({
           title: 'Oferta No Viable',
-          description: data.simulationResult?.message || 'Revisar detalles.',
+          description: data.offerResult?.message || 'Revisar detalles.',
           variant: 'destructive',
         });
       }
@@ -108,8 +109,8 @@ export function ApplicationDetails() {
     },
   });
 
-  const finalizeMutation = useMutation({
-    mutationFn: () => applicationRepository.finalize(id),
+  const acceptOfferMutation = useMutation({
+    mutationFn: () => applicationRepository.acceptOffer(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["application", id] });
       queryClient.invalidateQueries({ queryKey: ["application-events", id] });
@@ -331,11 +332,12 @@ export function ApplicationDetails() {
 
   const isClosed =
     app.status === ApplicationStatus.FINALIZED ||
-    app.status === ApplicationStatus.ABANDONED;
+    app.status === ApplicationStatus.ABANDONED ||
+    app.status === ApplicationStatus.PENDING_VALIDATION;
   const showAdminLogs = role === "ADMIN";
   const hasOffer =
-    app.simulationResult && Object.keys(app.simulationResult).length > 0;
-  const canSimulate = role === "CLIENT" && !isClosed;
+    app.offerResult && Object.keys(app.offerResult).length > 0;
+  const canSimulate = false; // Ya no se pueden simular más ofertas desde el detalle
   const lastEvent = app.events && app.events.length > 0 ? app.events[app.events.length - 1] : null;
   const isTechnicalError = lastEvent && lastEvent.type === "SYSTEM_ERROR";
 
@@ -362,11 +364,9 @@ export function ApplicationDetails() {
                       ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                       : app.status === ApplicationStatus.ABANDONED
                         ? "bg-rose-50 text-rose-700 border-rose-100"
-                        : app.status === ApplicationStatus.VALIDATED
-                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                          : app.status === ApplicationStatus.PENDING_VALIDATION
-                            ? "bg-amber-50 text-amber-700 border-amber-100"
-                            : "bg-primary/5 text-primary border-primary/10"
+                        : app.status === ApplicationStatus.PENDING_VALIDATION
+                          ? "bg-amber-50 text-amber-700 border-amber-100"
+                          : "bg-primary/5 text-primary border-primary/10"
                   }`}
                 >
                   {app.status}
@@ -403,7 +403,7 @@ export function ApplicationDetails() {
             </Card>
 
             {/* Paso 3: Decisión de Oferta (Visible si hay oferta) */}
-            {app.simulationResult && !isTechnicalError && (
+            {app.offerResult && !isTechnicalError && (
               <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                 <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                   <CardTitle className="font-heading text-xl font-bold text-slate-800">
@@ -414,7 +414,7 @@ export function ApplicationDetails() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
-                  {renderOfferDetails(app.simulationResult)}
+                  {renderOfferDetails(app.offerResult)}
                 </CardContent>
               </Card>
             )}
@@ -483,11 +483,9 @@ export function ApplicationDetails() {
                       ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                       : app.status === ApplicationStatus.ABANDONED
                         ? "bg-rose-50 text-rose-700 border-rose-100"
-                        : app.status === ApplicationStatus.VALIDATED
-                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                          : app.status === ApplicationStatus.PENDING_VALIDATION
-                            ? "bg-amber-50 text-amber-700 border-amber-100"
-                            : "bg-primary/5 text-primary border-primary/10"
+                        : app.status === ApplicationStatus.PENDING_VALIDATION
+                          ? "bg-amber-50 text-amber-700 border-amber-100"
+                          : "bg-primary/5 text-primary border-primary/10"
                   }`}
                 >
                   {app.status}
@@ -628,7 +626,7 @@ export function ApplicationDetails() {
               )}
 
               {/* Paso 3: Decisión de Oferta (Si tiene oferta generada) */}
-              {app.simulationResult && !isTechnicalError && (
+              {app.offerResult && !isTechnicalError && (
                 <Card className="border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] bg-white rounded-lg overflow-hidden">
                   <CardHeader className="pb-5 border-b border-border/20 bg-slate-50/20 px-6 py-5">
                     <CardTitle className="font-heading text-xl font-bold text-slate-800">
@@ -639,7 +637,7 @@ export function ApplicationDetails() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    {renderOfferDetails(app.simulationResult)}
+                    {renderOfferDetails(app.offerResult)}
 
                     {role === "CLIENT" && !isClosed && (
                       <div className="space-y-3 pt-6 border-t border-border/25">
@@ -647,11 +645,11 @@ export function ApplicationDetails() {
                           <Button
                             className="flex-1 h-11 text-sm font-heading font-bold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md shadow-[#0066cc]/10 transition-all active:scale-[0.98]"
                             disabled={
-                              finalizeMutation.isPending
+                              acceptOfferMutation.isPending
                             }
-                            onClick={() => finalizeMutation.mutate()}
+                            onClick={() => setIsAcceptDialogOpen(true)}
                           >
-                            {finalizeMutation.isPending ? (
+                            {acceptOfferMutation.isPending ? (
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
                               <CheckCircle2 className="mr-1.5 h-4.5 w-4.5" />
@@ -710,10 +708,10 @@ export function ApplicationDetails() {
         <DialogContent className="rounded-lg max-w-sm sm:max-w-md bg-white border border-border/60">
           <DialogHeader>
             <DialogTitle className="font-heading text-lg font-bold text-slate-800">
-              ¿Por qué deseas rechazar la oferta?
+              ¿Seguro que desea abandonar?
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500 mt-1">
-              Para cancelar la solicitud, por favor ingresa o selecciona un motivo obligatorio.
+              Si abandona el proceso tendrá que realizar una nueva solicitud. Selecciona o ingresa un motivo para continuar.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 my-2">
@@ -790,6 +788,44 @@ export function ApplicationDetails() {
                 <XCircle className="mr-1.5 h-4 w-4" />
               )}
               Confirmar Cancelación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Confirmación Aceptar Oferta */}
+      <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
+        <DialogContent className="rounded-lg max-w-sm sm:max-w-md bg-white border border-border/60">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-lg font-bold text-slate-800">
+              ¿Aceptar esta oferta?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 mt-1">
+              Una vez confirmada la oferta no podrá realizar cambios.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-border/20">
+            <Button
+              variant="outline"
+              onClick={() => setIsAcceptDialogOpen(false)}
+              className="h-10 text-xs font-semibold rounded-lg"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={acceptOfferMutation.isPending}
+              onClick={() => {
+                setIsAcceptDialogOpen(false);
+                acceptOfferMutation.mutate();
+              }}
+              className="h-10 text-xs font-semibold bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg shadow-md transition-all active:scale-[0.98]"
+            >
+              {acceptOfferMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-1.5 h-4 w-4" />
+              )}
+              Confirmar Aceptación
             </Button>
           </DialogFooter>
         </DialogContent>

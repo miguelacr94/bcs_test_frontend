@@ -1,7 +1,6 @@
 export enum ApplicationStatus {
   IN_PROGRESS = 'En Proceso',
   PENDING_VALIDATION = 'Pendiente Validación',
-  VALIDATED = 'Validada',
   FINALIZED = 'Finalizada',
   ABANDONED = 'Abandonada',
 }
@@ -20,7 +19,7 @@ export interface Application {
   status: ApplicationStatus;
   createdAt: string;
   events: ApplicationEvent[];
-  simulationResult?: any;
+  offerResult?: any;
 }
 
 export interface CreateApplicationDto {
