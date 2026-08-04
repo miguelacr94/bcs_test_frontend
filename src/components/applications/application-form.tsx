@@ -124,8 +124,8 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
       // 1. Si no existe en el perfil crediticio (o centrales)
       if (!status.isEligible) {
         toast({
-          title: "Usuario no elegible",
-          description: "El documento ingresado no cuenta con ofertas pre-aprobadas en este momento.",
+          title: "Documento no registrado",
+          description: "No se encontró información para el documento ingresado.",
           variant: "destructive",
         });
         return;

@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Eye, Search, Filter } from "lucide-react";
+import { Eye, Search, Filter } from "lucide-react";
 import Link from "next/link";
 
 const getStatusColor = (status: ApplicationStatus) => {
@@ -58,12 +58,9 @@ const getStatusLabel = (status: ApplicationStatus | string) => {
   }
 };
 
-export function ApplicationList({
-  statusFilter: initialStatusFilter,
-  adminMode = false,
-}: { statusFilter?: ApplicationStatus; adminMode?: boolean } = {}) {
+export function ApplicationList({ adminMode = false }: { adminMode?: boolean } = {}) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [status, setStatus] = useState<string>(initialStatusFilter || "ALL");
+  const [status, setStatus] = useState<string>("ALL");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["applications", status, searchTerm],
@@ -134,7 +131,10 @@ export function ApplicationList({
                 Radicado
               </TableHead>
               <TableHead className="font-semibold text-slate-600 h-12">
-                Cliente
+                Nombre
+              </TableHead>
+              <TableHead className="font-semibold text-slate-600 h-12">
+                Documento
               </TableHead>
               <TableHead className="font-semibold text-slate-600 h-12">
                 Canal
@@ -154,7 +154,7 @@ export function ApplicationList({
             {isLoading ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center h-32 text-slate-400 font-medium"
                 >
                   Cargando solicitudes...
@@ -163,7 +163,7 @@ export function ApplicationList({
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center h-32 text-rose-500 font-medium"
                 >
                   Error al cargar las solicitudes. Verifica la conexión con el
@@ -173,7 +173,7 @@ export function ApplicationList({
             ) : data?.data.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center h-32 text-slate-400 font-medium"
                 >
                   No hay solicitudes registradas.
@@ -189,7 +189,12 @@ export function ApplicationList({
                     {application.radicado}
                   </TableCell>
                   <TableCell className="font-semibold text-slate-700">
-                    {application.clientId}
+                    {application.customer
+                      ? `${application.customer.name} ${application.customer.lastName}`
+                      : <span className="text-slate-400 text-xs">—</span>}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm text-slate-500">
+                    {application.customer?.document ?? <span className="text-slate-400 text-xs">—</span>}
                   </TableCell>
                   <TableCell className="capitalize font-medium text-slate-500">
                     {application.channel.toLowerCase()}

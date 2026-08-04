@@ -34,9 +34,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { useParams } from "next/navigation";
+
 export function AdminValidationPanel({ application }: { application: any }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const params = useParams();
+  const id = params.id as string;
+  
   const [ref1Name, setRef1Name] = useState("");
   const [ref1Phone, setRef1Phone] = useState("");
   const [ref1Rel, setRef1Rel] = useState("");
@@ -49,13 +54,13 @@ export function AdminValidationPanel({ application }: { application: any }) {
 
   const validateMutation = useMutation({
     mutationFn: (data: any) =>
-      applicationRepository.validate(application.id, data, "Asistido"),
+      applicationRepository.validate(id, data, "Asistido"),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["application", application.id],
+        queryKey: ["application", id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["application-events", application.id],
+        queryKey: ["application-events", id],
       });
       toast({
         title: "Validación guardada",
@@ -74,13 +79,13 @@ export function AdminValidationPanel({ application }: { application: any }) {
 
   const finalizeMutation = useMutation({
     mutationFn: (withDisbursement: boolean) =>
-      applicationRepository.finalize(application.id, withDisbursement, "Asistido"),
+      applicationRepository.finalize(id, withDisbursement, "Asistido"),
     onSuccess: (data: any, variables: boolean) => {
       queryClient.invalidateQueries({
-        queryKey: ["application", application.id],
+        queryKey: ["application", id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["application-events", application.id],
+        queryKey: ["application-events", id],
       });
       toast({
         title: "Solicitud Finalizada",

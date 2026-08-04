@@ -16,6 +16,14 @@ export interface ApplicationEvent {
   metadata?: any;
 }
 
+export interface Customer {
+  name: string;
+  lastName: string;
+  document: string;
+  email?: string;
+  phone?: string;
+}
+
 export interface Application {
   id: string;
   radicado: string;
@@ -25,6 +33,7 @@ export interface Application {
   createdAt: string;
   events: ApplicationEvent[];
   offerResult?: any;
+  customer?: Customer;
 }
 
 export interface CreateApplicationDto {

@@ -1,32 +1,5 @@
-import { ApplicationList } from '@/components/dashboard/application-list';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ApplicationStatus } from '@/services/application.service';
+import { redirect } from 'next/navigation';
 
-export default function AdminDashboard() {
-  return (
-    <main className="flex-1 bg-muted/20">
-      <div className="container mx-auto px-4 py-8 md:py-12 max-w-7xl">
-        <div className="flex flex-col space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Panel de Administración</h1>
-            <p className="text-muted-foreground mt-2">
-              Consulta y gestiona las solicitudes de crédito que se encuentran en proceso.
-            </p>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Listado de Solicitudes</CardTitle>
-              <CardDescription>
-                Consulta el listado completo de solicitudes y utiliza los filtros para encontrar lo que necesitas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ApplicationList />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </main>
-  );
+export default function AdminPage() {
+  redirect('/admin/applications');
 }

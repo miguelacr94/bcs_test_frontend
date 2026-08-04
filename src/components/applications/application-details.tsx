@@ -388,17 +388,37 @@ export function ApplicationDetails() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Cliente (Documento)
+                      Cliente
                     </p>
                     <p className="text-md font-semibold text-slate-800">
-                      {app.clientId}
+                      {app.customer ? `${app.customer.name} ${app.customer.lastName} (${app.customer.document})` : app.clientId}
                     </p>
                   </div>
+                  {app.customer?.email && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Correo
+                      </p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {app.customer.email}
+                      </p>
+                    </div>
+                  )}
+                  {app.customer?.phone && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Teléfono
+                      </p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {app.customer.phone}
+                      </p>
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Canal de Originación
                     </p>
-                    <p className="text-md font-semibold text-slate-800 capitalize">
+                    <p className="text-sm font-semibold text-slate-800 capitalize">
                       {app.channel.toLowerCase()}
                     </p>
                   </div>
