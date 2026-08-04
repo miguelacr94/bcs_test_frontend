@@ -16,7 +16,7 @@ export class ApiApplicationRepository implements IApplicationRepository {
   }
 
   async findAll(params?: PaginationDto): Promise<PaginatedResult<Application>> {
-    const response = await api.post<PaginatedResult<Application>>('/applications/list', params || {});
+    const response = await api.post<PaginatedResult<Application>>('/applications/admin/list', params || {});
     return response.data;
   }
 
