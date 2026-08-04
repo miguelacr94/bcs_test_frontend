@@ -25,6 +25,11 @@ export class ApiApplicationRepository implements IApplicationRepository {
     return response.data;
   }
 
+  async findByIdAdmin(id: string): Promise<Application> {
+    const response = await api.post<Application>(`/applications/admin/get-by-id`, { id });
+    return response.data;
+  }
+
   async update(id: string, data: UpdateApplicationDto): Promise<Application> {
     const response = await api.post<Application>(`/applications/update`, { id, updateDto: data });
     return response.data;

@@ -70,13 +70,16 @@ export function ApplicationForm({
     typeof registrationSchema
   > | null>(null);
 
-  // Simulación
-  const [simAmount, setSimAmount] = useState<number>(10000000);
-  const [simTerm, setSimTerm] = useState<number>(36);
+  const [simAmount, setSimAmount] = useState<number | string>("");
+  const [simTerm, setSimTerm] = useState<number | string>("");
   const [offerResult, setOfferResult] = useState<any | null>(null);
   const [evaluationLoading, setEvaluationLoading] = useState(false);
-  // Indica si el cliente ya estaba registrado en la DB (solo necesita crear la aplicación)
   const [isExistingCustomer, setIsExistingCustomer] = useState(false);
+  const [globalError, setGlobalError] = useState<{
+    message: string;
+    availableDate?: string;
+    daysRemaining?: number;
+  } | null>(null);
 
   const validationForm = useForm<z.infer<typeof validationSchema>>({
     resolver: zodResolver(validationSchema),
@@ -111,11 +114,12 @@ export function ApplicationForm({
       handleApplicationSuccess(data.id);
     },
     onError: (error: any) => {
-      const msg = error.response?.data?.message?.[0] || error.message;
-      toast({
-        title: "Error",
-        description: msg,
-        variant: "destructive",
+      const responseData = error.response?.data;
+      const msg = Array.isArray(responseData?.message) ? responseData.message[0] : responseData?.message || error.message;
+      setGlobalError({
+        message: msg,
+        availableDate: responseData?.availableDate,
+        daysRemaining: responseData?.daysRemaining,
       });
     },
   });
@@ -164,12 +168,22 @@ export function ApplicationForm({
         setStep("EVALUATION");
       }
     },
-    onError: () => {
-      toast({
-        title: "Error de validación",
-        description: "No pudimos verificar tu documento.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      const responseData = error.response?.data;
+      if (responseData?.availableDate) {
+        const msg = Array.isArray(responseData?.message) ? responseData.message[0] : responseData?.message || error.message;
+        setGlobalError({
+          message: msg,
+          availableDate: responseData.availableDate,
+          daysRemaining: responseData.daysRemaining,
+        });
+      } else {
+        toast({
+          title: "Error de validación",
+          description: responseData?.message || "No pudimos verificar tu documento.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -190,11 +204,12 @@ export function ApplicationForm({
       handleApplicationSuccess(data.application.id);
     },
     onError: (error: any) => {
-      toast({
-        title: "Error al guardar el proceso",
-        description:
-          error.response?.data?.message || "No se pudo radicar la solicitud.",
-        variant: "destructive",
+      const responseData = error.response?.data;
+      const msg = Array.isArray(responseData?.message) ? responseData.message[0] : responseData?.message || error.message;
+      setGlobalError({
+        message: msg,
+        availableDate: responseData?.availableDate,
+        daysRemaining: responseData?.daysRemaining,
       });
     },
   });
@@ -230,18 +245,19 @@ export function ApplicationForm({
           type: "ERROR_TECNICO",
           message: "Error técnico temporal de comunicación con centrales.",
         });
-      }
-      // Caso 2: No viable con alternativa de cupo menor (33% probabilidad)
-      else if (random < 0.66) {
-        const alternativeAmount = Math.round(simAmount * 0.7);
+      } else {
+        const alternativeAmount = Math.round(Number(simAmount) * 0.7);
+        const term = Number(simTerm);
+        // Caso 2: No viable con alternativa de cupo menor (33% probabilidad)
+        if (random < 0.66) {
         setOfferResult({
           type: "NO_VIABLE",
           success: false,
-          message: `Monto solicitado de $${simAmount.toLocaleString("es-CO")} no es viable según perfil crediticio.`,
+          message: `Monto solicitado de $${Number(simAmount).toLocaleString("es-CO")} no es viable según perfil crediticio.`,
           offerDetails: {
             approvedAmount: alternativeAmount,
             interestRate: 1.85,
-            termMonths: Math.min(simTerm, 48),
+            termMonths: Math.min(term, 48),
           },
         });
         toast({
@@ -258,9 +274,9 @@ export function ApplicationForm({
           success: true,
           message: "Oferta pre-aprobada disponible",
           offerDetails: {
-            approvedAmount: simAmount,
+            approvedAmount: Number(simAmount),
             interestRate: 1.45,
-            termMonths: simTerm,
+            termMonths: term,
           },
         });
         toast({
@@ -268,6 +284,7 @@ export function ApplicationForm({
           description: "Tu solicitud ha sido pre-aprobada con éxito.",
         });
       }
+    }
     } catch (err) {
       toast({
         title: "Error en la consulta",
@@ -298,12 +315,12 @@ export function ApplicationForm({
           handleApplicationSuccess(data.id);
         })
         .catch((error: any) => {
-          toast({
-            title: "Error al crear la solicitud",
-            description:
-              error.response?.data?.message ||
-              "No se pudo radicar la solicitud.",
-            variant: "destructive",
+          const responseData = error.response?.data;
+          const msg = Array.isArray(responseData?.message) ? responseData.message[0] : responseData?.message || error.message;
+          setGlobalError({
+            message: msg,
+            availableDate: responseData?.availableDate,
+            daysRemaining: responseData?.daysRemaining,
           });
         });
     } else {
@@ -324,6 +341,67 @@ export function ApplicationForm({
     validateMutation.isPending ||
     createApplicationDirect.isPending ||
     applyTransactionMutation.isPending;
+
+  if (globalError) {
+    return (
+      <div className="bg-card rounded-lg border border-rose-200 shadow-sm p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in zoom-in-95">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center border border-rose-100">
+            <svg
+              className="w-8 h-8 text-rose-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-heading font-bold text-slate-800">
+              Solicitud Restringida
+            </h3>
+            <p className="text-sm text-slate-600 font-medium max-w-md mx-auto">
+              {globalError.message}
+            </p>
+          </div>
+          {globalError.availableDate && (
+            <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 w-full max-w-sm mt-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Fecha disponible para aplicar:
+              </p>
+              <p className="text-sm font-bold text-blue-600">
+                {new Date(globalError.availableDate).toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
+              {globalError.daysRemaining !== undefined && (
+                <p className="text-xs text-slate-400 mt-1">
+                  (Faltan {globalError.daysRemaining} días)
+                </p>
+              )}
+            </div>
+          )}
+          <Button
+            onClick={() => {
+              setGlobalError(null);
+              setStep("VALIDATION");
+            }}
+            className="mt-6 h-11 px-8 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-colors"
+          >
+            Volver al inicio
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-lg border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in slide-in-from-bottom-8">
@@ -357,7 +435,7 @@ export function ApplicationForm({
                 <FormItem className="w-full">
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-slate-700 font-medium transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]">
@@ -550,8 +628,9 @@ export function ApplicationForm({
               <Input
                 type="number"
                 value={simAmount}
-                onChange={(e) => setSimAmount(Number(e.target.value))}
+                onChange={(e) => setSimAmount(e.target.value ? Number(e.target.value) : "")}
                 className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-lg text-md font-semibold transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]"
+                placeholder="Ej. 5000000"
               />
             </div>
             <div className="space-y-1.5">
@@ -560,7 +639,7 @@ export function ApplicationForm({
               </label>
               <Select
                 onValueChange={(val) => setSimTerm(Number(val))}
-                defaultValue="36"
+                value={simTerm ? String(simTerm) : undefined}
               >
                 <SelectTrigger className="h-11 w-full bg-transparent border-primary/30 hover:border-primary/60 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg text-sm font-medium text-slate-700 transition-all shadow-[0_2px_6px_rgba(0,102,204,0.04)]">
                   <SelectValue placeholder="Selecciona el plazo" />
@@ -577,8 +656,8 @@ export function ApplicationForm({
 
             <Button
               onClick={handleLocalSimulate}
-              disabled={evaluationLoading || isWorking}
-              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold font-heading shadow-md transition-all flex items-center justify-center gap-1.5"
+              disabled={evaluationLoading || isWorking || !simAmount || !simTerm}
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold font-heading shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               {evaluationLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

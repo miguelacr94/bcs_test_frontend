@@ -19,12 +19,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // Get redirect parameter from URL
-  const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/admin/applications';
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Get redirect parameter from URL
+    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/admin/applications';
 
     try {
       // Usar la instancia de axios configurada (desenvuelve la respuesta automáticamente)

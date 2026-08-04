@@ -62,6 +62,7 @@ export function ApplicationDetails() {
 
   // Helper function to prevent TypeScript from narrowing role type
   const getRole = (): "CLIENT" | "ADMIN" => role;
+  const isAdminRoute = pathname.startsWith("/admin");
 
   const [isSimulateOpen, setIsSimulateOpen] = useState(false);
   const [amount, setAmount] = useState<number | "">("");
@@ -76,14 +77,14 @@ export function ApplicationDetails() {
     isError,
   } = useQuery({
     queryKey: ["application", id],
-    queryFn: () => applicationRepository.findById(id),
+    queryFn: () => isAdminRoute ? applicationRepository.findByIdAdmin(id) : applicationRepository.findById(id),
     enabled: !!id,
   });
 
   const { data: events } = useQuery({
     queryKey: ["application-events", id],
     queryFn: () => applicationRepository.getEvents(id),
-    enabled: !!id && getRole() === "ADMIN",
+    enabled: !!id && isAdminRoute,
   });
 
   const simulateMutation = useMutation({
@@ -358,7 +359,7 @@ export function ApplicationDetails() {
     app.status === ApplicationStatus.FINALIZED ||
     app.status === ApplicationStatus.ABANDONED ||
     app.status === ApplicationStatus.PENDING_VALIDATION;
-  const showAdminLogs = getRole() === "ADMIN" && pathname.startsWith("/admin");
+  const showAdminLogs = getRole() === "ADMIN" && isAdminRoute;
   const hasOffer = app.offerResult && Object.keys(app.offerResult).length > 0;
   const canSimulate = false; // Ya no se pueden simular más ofertas desde el detalle
   const lastEvent =

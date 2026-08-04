@@ -11,6 +11,7 @@ export interface IApplicationRepository {
   create(data: CreateApplicationDto): Promise<Application>;
   findAll(params?: PaginationDto): Promise<PaginatedResult<Application>>;
   findById(id: string): Promise<Application>;
+  findByIdAdmin(id: string): Promise<Application>;
   update(id: string, data: UpdateApplicationDto): Promise<Application>;
   simulateOffer(id: string, amount: number, termMonths: number): Promise<Application>;
   acceptOffer(id: string): Promise<Application>;
