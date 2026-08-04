@@ -55,8 +55,8 @@ export class ApiApplicationRepository implements IApplicationRepository {
     return response.data;
   }
 
-  async finalize(id: string, withDisbursement: boolean, channel?: string): Promise<any> {
-    const response = await api.post(`/applications/finalize`, { id, withDisbursement, channel });
+  async finalize(id: string, withDisbursement: boolean, channel?: string, reason?: string): Promise<any> {
+    const response = await api.post(`/applications/finalize`, { id, withDisbursement, channel, reason });
     return response.data;
   }
 }

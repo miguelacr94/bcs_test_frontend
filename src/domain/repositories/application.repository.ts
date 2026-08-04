@@ -17,5 +17,5 @@ export interface IApplicationRepository {
   abandon(id: string, reason: string): Promise<Application>;
   getEvents(id: string): Promise<ApplicationEvent[]>;
   validate(id: string, validationData: any): Promise<any>;
-  finalize(id: string, withDisbursement: boolean): Promise<any>;
+  finalize(id: string, withDisbursement: boolean, channel?: string, reason?: string): Promise<any>;
 }

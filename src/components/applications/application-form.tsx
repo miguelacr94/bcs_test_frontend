@@ -50,21 +50,26 @@ const registrationSchema = z.object({
 type Step = "VALIDATION" | "REGISTRATION" | "EVALUATION";
 
 interface ApplicationFormProps {
-  mode?: 'client' | 'admin';
+  mode?: "client" | "admin";
   onSuccess?: (applicationId: string) => void;
 }
 
-export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormProps = {}) {
+export function ApplicationForm({
+  mode = "client",
+  onSuccess,
+}: ApplicationFormProps = {}) {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>("VALIDATION");
   const [document, setDocument] = useState("");
-  
+
   // Guardado temporal de la info de registro localmente
-  const [localRegistrationData, setLocalRegistrationData] = useState<z.infer<typeof registrationSchema> | null>(null);
-  
+  const [localRegistrationData, setLocalRegistrationData] = useState<z.infer<
+    typeof registrationSchema
+  > | null>(null);
+
   // Simulación
   const [simAmount, setSimAmount] = useState<number>(10000000);
   const [simTerm, setSimTerm] = useState<number>(36);
@@ -83,7 +88,7 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
     defaultValues: { name: "", lastName: "", email: "", phone: "" },
   });
 
-  const channel = mode === 'admin' ? 'Asistido' : 'Autogestionado';
+  const channel = mode === "admin" ? "Asistido" : "Autogestionado";
 
   const handleApplicationSuccess = (applicationId: string) => {
     queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -120,12 +125,13 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
     mutationFn: (doc: string) => validateUserStatus(doc),
     onSuccess: async (status, doc) => {
       setDocument(doc);
-      
+
       // 1. Si no existe en el perfil crediticio (o centrales)
       if (!status.isEligible) {
         toast({
           title: "Documento no registrado",
-          description: "No se encontró información para el documento ingresado.",
+          description:
+            "No se encontró información para el documento ingresado.",
           variant: "destructive",
         });
         return;
@@ -140,7 +146,7 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
       // 3. Si existe en la base de datos local (Customer)
       if (status.activeApplicationId) {
         const toastDesc =
-          mode === 'admin'
+          mode === "admin"
             ? "Redirigiendo al detalle de la solicitud existente."
             : "Te estamos redirigiendo para que continúes con tu proceso.";
         toast({
@@ -169,8 +175,13 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
 
   // Mutación Transaccional Única: Aplicar (Envía todo el JSON junto al Backend)
   const applyTransactionMutation = useMutation({
-    mutationFn: (payload: { customerData: z.infer<typeof registrationSchema> & { document: string; channel: string }; offerResult: any }) =>
-      customerRepository.applyTransaction(payload),
+    mutationFn: (payload: {
+      customerData: z.infer<typeof registrationSchema> & {
+        document: string;
+        channel: string;
+      };
+      offerResult: any;
+    }) => customerRepository.applyTransaction(payload),
     onSuccess: (data) => {
       toast({
         title: "¡Solicitud Creada con Éxito!",
@@ -181,7 +192,8 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
     onError: (error: any) => {
       toast({
         title: "Error al guardar el proceso",
-        description: error.response?.data?.message || "No se pudo radicar la solicitud.",
+        description:
+          error.response?.data?.message || "No se pudo radicar la solicitud.",
         variant: "destructive",
       });
     },
@@ -203,14 +215,15 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
     try {
       // Simular latencia
       await new Promise((r) => setTimeout(r, 1200));
-      
+
       const random = Math.random();
 
       // Caso 3: Error técnico temporal (33% probabilidad)
       if (random < 0.33) {
         toast({
           title: "Error técnico temporal",
-          description: "Fallo de conexión con el Core del Banco. Intente nuevamente.",
+          description:
+            "Fallo de conexión con el Core del Banco. Intente nuevamente.",
           variant: "destructive",
         });
         setOfferResult({
@@ -229,11 +242,12 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
             approvedAmount: alternativeAmount,
             interestRate: 1.85,
             termMonths: Math.min(simTerm, 48),
-          }
+          },
         });
         toast({
           title: "Oferta alternativa generada",
-          description: "El monto solicitado no es viable, te ofrecemos una alternativa.",
+          description:
+            "El monto solicitado no es viable, te ofrecemos una alternativa.",
           variant: "default",
         });
       }
@@ -247,7 +261,7 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
             approvedAmount: simAmount,
             interestRate: 1.45,
             termMonths: simTerm,
-          }
+          },
         });
         toast({
           title: "¡Felicitaciones! Oferta aprobada",
@@ -270,23 +284,28 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
 
     if (isExistingCustomer) {
       // Cliente ya registrado: solo crear la aplicación con la oferta
-      applicationRepository.create({
-        clientId: document,
-        channel,
-        offerResult,
-      }).then((data) => {
-        toast({
-          title: "¡Solicitud creada con éxito!",
-          description: "La oferta ha sido asignada a tu solicitud.",
+      applicationRepository
+        .create({
+          clientId: document,
+          channel,
+          offerResult,
+        })
+        .then((data) => {
+          toast({
+            title: "¡Solicitud creada con éxito!",
+            description: "La oferta ha sido asignada a tu solicitud.",
+          });
+          handleApplicationSuccess(data.id);
+        })
+        .catch((error: any) => {
+          toast({
+            title: "Error al crear la solicitud",
+            description:
+              error.response?.data?.message ||
+              "No se pudo radicar la solicitud.",
+            variant: "destructive",
+          });
         });
-        handleApplicationSuccess(data.id);
-      }).catch((error: any) => {
-        toast({
-          title: "Error al crear la solicitud",
-          description: error.response?.data?.message || "No se pudo radicar la solicitud.",
-          variant: "destructive",
-        });
-      });
     } else {
       // Cliente nuevo: registrar cliente y crear aplicación en una sola transacción
       if (!localRegistrationData) return;
@@ -310,14 +329,18 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
     <div className="bg-card rounded-lg border border-primary/20 shadow-[0_16px_40px_rgba(0,102,204,0.06)] p-8 md:p-10 transition-all duration-500 w-full animate-in fade-in slide-in-from-bottom-8">
       <div className="text-center mb-8">
         <h2 className="font-heading text-xl font-bold text-slate-800 tracking-tight">
-          {step === "VALIDATION" ? "Solicítalo aquí" : step === "REGISTRATION" ? "Completa tu perfil" : "Evaluación Crediticia"}
+          {step === "VALIDATION"
+            ? "Solicítalo aquí"
+            : step === "REGISTRATION"
+              ? "Completa tu perfil"
+              : "Evaluación Crediticia"}
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
           {step === "VALIDATION"
             ? "Ingresa tus datos para comenzar"
             : step === "REGISTRATION"
-            ? "Completa los siguientes campos"
-            : "Ingresa el monto para evaluar tu perfil"}
+              ? "Completa los siguientes campos"
+              : "Ingresa el monto para evaluar tu perfil"}
         </p>
       </div>
 
@@ -521,7 +544,9 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
         <div className="space-y-5 animate-in fade-in slide-in-from-right-8 duration-500">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Monto Solicitado</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Monto Solicitado
+              </label>
               <Input
                 type="number"
                 value={simAmount}
@@ -530,7 +555,9 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Plazo de Pago</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Plazo de Pago
+              </label>
               <Select
                 onValueChange={(val) => setSimTerm(Number(val))}
                 defaultValue="36"
@@ -568,22 +595,43 @@ export function ApplicationForm({ mode = 'client', onSuccess }: ApplicationFormP
               {offerResult.type === "ERROR_TECNICO" ? (
                 <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-lg p-4 space-y-1.5">
                   <p className="font-bold text-xs">Fallo de Comunicación</p>
-                  <p className="text-[11px] text-rose-700">{offerResult.message}</p>
+                  <p className="text-[11px] text-rose-700">
+                    {offerResult.message}
+                  </p>
                 </div>
               ) : (
-                <div className={`p-4 border rounded-lg space-y-3 ${offerResult.success ? 'bg-emerald-50/30 border-emerald-100' : 'bg-amber-50/30 border-amber-100'}`}>
-                  <p className={`font-bold text-xs ${offerResult.success ? 'text-emerald-800' : 'text-amber-800'}`}>
-                    {offerResult.success ? "¡Oferta Aprobada!" : "Propuesta Alternativa"}
+                <div
+                  className={`p-4 border rounded-lg space-y-3 ${offerResult.success ? "bg-emerald-50/30 border-emerald-100" : "bg-amber-50/30 border-amber-100"}`}
+                >
+                  <p
+                    className={`font-bold text-xs ${offerResult.success ? "text-emerald-800" : "text-amber-800"}`}
+                  >
+                    {offerResult.success
+                      ? "¡Oferta Aprobada!"
+                      : "Propuesta Alternativa"}
                   </p>
-                  <p className="text-[11px] text-slate-600">{offerResult.message}</p>
+                  <p className="text-[11px] text-slate-600">
+                    {offerResult.message}
+                  </p>
                   <div className="grid grid-cols-2 gap-2 text-center bg-white/60 p-2.5 rounded-lg border border-slate-100">
                     <div>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Monto Aprobado</span>
-                      <span className="text-sm font-bold text-slate-800">${offerResult.offerDetails.approvedAmount.toLocaleString("es-CO")}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Monto Aprobado
+                      </span>
+                      <span className="text-sm font-bold text-slate-800">
+                        $
+                        {offerResult.offerDetails.approvedAmount.toLocaleString(
+                          "es-CO",
+                        )}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tasa (M.V.)</span>
-                      <span className="text-sm font-bold text-slate-800">{offerResult.offerDetails.interestRate}%</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Tasa (M.V.)
+                      </span>
+                      <span className="text-sm font-bold text-slate-800">
+                        {offerResult.offerDetails.interestRate}%
+                      </span>
                     </div>
                   </div>
                 </div>

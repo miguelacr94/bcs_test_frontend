@@ -50,7 +50,8 @@ export function AdminValidationPanel({ application }: { application: any }) {
   const [finalizeDialog, setFinalizeDialog] = useState<{
     open: boolean;
     withDisbursement: boolean;
-  }>({ open: false, withDisbursement: true });
+    reason?: string;
+  }>({ open: false, withDisbursement: true, reason: "" });
 
   const validateMutation = useMutation({
     mutationFn: (data: any) =>
@@ -78,9 +79,9 @@ export function AdminValidationPanel({ application }: { application: any }) {
   });
 
   const finalizeMutation = useMutation({
-    mutationFn: (withDisbursement: boolean) =>
-      applicationRepository.finalize(id, withDisbursement, "Asistido"),
-    onSuccess: (data: any, variables: boolean) => {
+    mutationFn: (data: { withDisbursement: boolean; reason?: string }) =>
+      applicationRepository.finalize(id, data.withDisbursement, "Asistido", data.reason),
+    onSuccess: (data: any, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["application", id],
       });
@@ -247,7 +248,7 @@ export function AdminValidationPanel({ application }: { application: any }) {
             <Button
               disabled={!hasValidationData || finalizeMutation.isPending}
               onClick={() =>
-                setFinalizeDialog({ open: true, withDisbursement: true })
+                setFinalizeDialog({ open: true, withDisbursement: true, reason: "" })
               }
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
@@ -261,7 +262,7 @@ export function AdminValidationPanel({ application }: { application: any }) {
             <Button
               disabled={!hasValidationData || finalizeMutation.isPending}
               onClick={() =>
-                setFinalizeDialog({ open: true, withDisbursement: false })
+                setFinalizeDialog({ open: true, withDisbursement: false, reason: "" })
               }
               variant="outline"
               className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
@@ -298,6 +299,17 @@ export function AdminValidationPanel({ application }: { application: any }) {
                 : "Se finalizará la solicitud sin procesar ningún desembolso. Esta acción no se puede deshacer."}
             </DialogDescription>
           </DialogHeader>
+          {!finalizeDialog.withDisbursement && (
+            <div className="py-2 mt-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700">Justificación requerida</Label>
+              <textarea
+                placeholder="Explica el motivo por el cual finalizas sin desembolso..."
+                value={finalizeDialog.reason || ""}
+                onChange={(e) => setFinalizeDialog((prev) => ({ ...prev, reason: e.target.value }))}
+                className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              />
+            </div>
+          )}
           <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-border/20">
             <Button
               variant="outline"
@@ -310,10 +322,14 @@ export function AdminValidationPanel({ application }: { application: any }) {
               Cancelar
             </Button>
             <Button
-              disabled={finalizeMutation.isPending}
+              disabled={
+                finalizeMutation.isPending ||
+                (!finalizeDialog.withDisbursement && (!finalizeDialog.reason || finalizeDialog.reason.trim() === ""))
+              }
               onClick={() => {
+                const { withDisbursement, reason } = finalizeDialog;
                 setFinalizeDialog((prev) => ({ ...prev, open: false }));
-                finalizeMutation.mutate(finalizeDialog.withDisbursement);
+                finalizeMutation.mutate({ withDisbursement, reason });
               }}
               className={`h-10 text-xs font-semibold text-white rounded-lg shadow-md transition-all active:scale-[0.98] ${
                 finalizeDialog.withDisbursement

@@ -22,10 +22,13 @@ export function Navbar() {
           <nav className="flex items-center space-x-2">
             {role === 'ADMIN' ? (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-secondary/80 px-3 py-1.5 rounded-lg border border-border/50 shadow-sm">
+                <Link 
+                  href="/admin/applications"
+                  className="flex items-center gap-2 bg-secondary/80 px-3 py-1.5 rounded-lg border border-border/50 shadow-sm hover:bg-secondary/100 transition-colors cursor-pointer"
+                >
                   <UserCircle className="h-5 w-5 text-[#0066cc]" />
                   <span className="text-sm font-semibold text-slate-700">Admin</span>
-                </div>
+                </Link>
                 <button 
                   onClick={() => {
                     localStorage.removeItem("auth_token");

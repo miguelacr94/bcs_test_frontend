@@ -34,6 +34,7 @@ export interface Application {
   events: ApplicationEvent[];
   offerResult?: any;
   customer?: Customer;
+  statusReason?: string;
 }
 
 export interface CreateApplicationDto {
